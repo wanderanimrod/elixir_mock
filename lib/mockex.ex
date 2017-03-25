@@ -3,16 +3,19 @@ defmodule Mockex do
   Documentation for Mockex.
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Mockex.hello
-      :world
-
-  """
-  def hello do
-    :world
+  defmacrop mock(_module, mod_name) do
+    quote do
+      defmodule unquote(mod_name) do
+        def f, do: 10
+      end
+    end
   end
+
+  def mock_from(module) do
+    mod_name = :mock_mod
+    mock(module, mod_name)
+    mod_name
+  end
+
 end
+
