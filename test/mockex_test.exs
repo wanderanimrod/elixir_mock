@@ -1,5 +1,6 @@
 defmodule MockexTest do
   use ExUnit.Case, async: true
+  alias Mockex, as: Mock
 
   defmodule RealModule do
     def function_one(_arg), do: :real_result_one
@@ -7,7 +8,7 @@ defmodule MockexTest do
   end
 
   test "module registration" do
-    mock_mod = Mockex.mock_from(RealModule)
+    mock_mod = Mock.of(RealModule)
     assert mock_mod.f == 10
   end
 

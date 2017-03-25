@@ -11,7 +11,7 @@ defmodule Mockex do
     end
   end
 
-  def mock_from(module) do
+  def of(module) do
     mod_name = :mock_mod
     mock(module, mod_name)
     mod_name
