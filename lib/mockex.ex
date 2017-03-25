@@ -3,19 +3,24 @@ defmodule Mockex do
   Documentation for Mockex.
   """
 
-  defmacrop mock(_module, mod_name) do
-    quote do
-      defmodule unquote(mod_name) do
-        def f, do: 10
+  defp create_mock(real_module, mock_module_name) do
+    module_defn = quote do
+      @real_functions unquote(real_module).__info__(:functions)
+
+      def f, do: 10
+
+      def functions() do
+        @real_functions
       end
     end
+    
+    Module.create(mock_module_name, module_defn, Macro.Env.location(__ENV__))
   end
 
-  def of(module) do
-    mod_name = :mock_mod
-    mock(module, mod_name)
+  def of(real_module) do
+    mod_name = :"#{UUID.uuid4(:hex)}"
+    create_mock(real_module, mod_name)
     mod_name
   end
 
 end
-

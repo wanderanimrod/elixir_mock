@@ -8,16 +8,14 @@ defmodule MockexTest do
   end
 
   test "module registration" do
-    mock_mod = Mock.of(RealModule)
-    assert mock_mod.f == 10
+    mock = Mock.of RealModule
+    assert mock.f == 10
   end
 
 #  test "should create full mocks of module returning fake results" do
-#    m = Mockex.mock RealModule
-#    assert m.function_one(1) == :fake
-#    assert :random_module_name.function_one(1) == 0
-#    assert m == []
-#    assert m.function_two(1, 2) == :fake
+#    mock = Mock.of RealModule
+#    assert mock.functions() == []
+##    assert mock.function_one(1) == nil
 #  end
 
 #  test "should allow for inspection of calls on mock" do
