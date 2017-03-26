@@ -3,7 +3,7 @@ defmodule Mockex do
   Documentation for Mockex.
   """
 
-  def make_args(_arity = 0), do: []
+  require Logger
 
   defmacro defkv(real_functions) do
     quote bind_quoted: [real_functions: real_functions] do
@@ -32,8 +32,19 @@ defmodule Mockex do
     end
   end
 
+  defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
+
+  defmacro defmock(_real_module, do: mock_ast) do
+    mod_name = random_module_name()
+    quote do
+      defmodule unquote(mod_name) do
+        unquote(mock_ast)
+      end
+    end
+  end
+
   def of(real_module) do
-    mod_name = :"#{UUID.uuid4(:hex)}"
+    mod_name = random_module_name()
     create_mock(real_module, mod_name)
     mod_name
   end

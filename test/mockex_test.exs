@@ -1,5 +1,6 @@
 defmodule MockexTest do
   use ExUnit.Case, async: true
+  require Mockex
   alias Mockex, as: Mock
 
   defmodule RealModule do
@@ -19,7 +20,14 @@ defmodule MockexTest do
     assert RealModule.function_one(1) == :real_result_one
   end
 
-# todo allow definition of some functions on mock
+  test "should allow definition of mock partially overriding real module functions" do
+    {_, mock, _, _} = Mock.defmock RealModule do
+      def function_one(_), do: :overriden_f1
+    end
+    assert mock.function_one(1) == :overriden_f1
+#    assert mock.function_two()
+  end
+
 # todo don't allow function definitions that are not on the real module
 # todo allow multiple mocks from same module with different functions defined
 # todo genserver behaviour of real module is kept in mock
