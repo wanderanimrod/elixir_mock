@@ -5,7 +5,7 @@ defmodule Mockex do
 
   require Logger
 
-  defmacro defkv(real_functions) do
+  defmacro inject_empty_stubs(real_functions) do
     quote bind_quoted: [real_functions: real_functions] do
       Enum.map real_functions, fn {fn_name, arity} ->
         args = case arity do
@@ -26,7 +26,7 @@ defmodule Mockex do
         require Mockex
 
         real_functions = unquote(real_module).__info__(:functions)
-        Mockex.defkv(real_functions)
+        Mockex.inject_empty_stubs(real_functions)
       end
     end
   end
@@ -67,7 +67,7 @@ defmodule Mockex do
         unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
           not {fn_name, arity} in unquote(stubs)
         end
-        Mockex.defkv(unstubbed_fns)
+        Mockex.inject_empty_stubs(unstubbed_fns)
 
         def start_link do
           GenServer.start_link(__MODULE__, [], name: unquote(mod_name))
