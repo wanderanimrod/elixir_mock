@@ -10,7 +10,7 @@ defmodule Mockex do
       Enum.map real_functions, fn {fn_name, arity} ->
         args = case arity do
           0 -> []
-          _ -> Enum.to_list(1..arity)
+          _ -> 1..arity |> Enum.map(&(Macro.var(:"arg_#{&1}", __MODULE__)))
         end
 
         def unquote(:"#{fn_name}")(unquote_splicing(args)) do
@@ -33,18 +33,21 @@ defmodule Mockex do
 
   defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
 
-  defp extract_stubs({:def, _, [{fn_name, _, _}, _]}) do
-    [fn_name]
+  defp extract_stubs({:def, _, [{fn_name, _, args_list}, _]}) do
+    arity = case args_list do
+      nil -> 0
+      list -> length(list)
+    end
+    [{fn_name, arity}]
   end
 
 #  defp extract_stubs([ast]) do
 #    ast
 #  end
 
-  defmacro defmockof(real_module, do: mock_ast) do
+  defmacro defmock_of(real_module, do: mock_ast) do
     stubs = extract_stubs(mock_ast)
     mod_name = random_module_name()
-
     quote do
       defmodule unquote(mod_name) do
         require Mockex
@@ -53,7 +56,7 @@ defmodule Mockex do
 
         real_functions = unquote(real_module).__info__(:functions)
         unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
-          not fn_name in unquote(stubs)
+          not {fn_name, arity} in unquote(stubs)
         end
         Mockex.defkv(unstubbed_fns)
       end

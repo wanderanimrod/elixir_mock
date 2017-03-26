@@ -22,7 +22,7 @@ defmodule MockexTest do
   end
 
   test "should allow definition of mock partially overriding real module functions" do
-    {_, mock, _, _} = defmockof RealModule do
+    {_, mock, _, _} = defmock_of RealModule do
       def function_one(_), do: :overriden_f1
     end
 
@@ -30,19 +30,21 @@ defmodule MockexTest do
     assert mock.function_two(1, 2) == nil
   end
 
-#  test "should only override function heads with the same arity as the heads specified for the mock" do
-#    defmodule Real do
-#      def x, do: {:arity, 0}
-#      def x(_arg), do: {:arity, 1}
-#    end
-#
-#    {_, mock, _, _} = Mock.defmock Real do
-#      def x, do: 10
-#    end
-#
-#    assert mock.function_one(1) == :overriden_f1
-#    assert mock.function_two(1, 2) == nil
-#  end
+  # todo: should mock module with more than one function
+
+  test "should only override function heads with the same arity as the heads specified for the mock" do
+    defmodule Real do
+      def x, do: {:arity, 0}
+      def x(_arg), do: {:arity, 1}
+    end
+
+    {_, mock, _, _} = defmock_of Real do
+      def x, do: :overriden_x
+    end
+
+    assert mock.x == :overriden_x
+    assert mock.x(:some_arg) == nil
+  end
 
 # todo don't allow function definitions that are not on the real module
 # todo allow multiple mocks from same module with different functions defined
