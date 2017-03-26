@@ -9,7 +9,8 @@ defmodule MockexTest do
 
   test "module registration" do
     mock = Mock.of RealModule
-    assert mock.f == 10
+    assert mock.function_one() == nil
+#    assert mock.__info__(:functions) == [function_one: 1, function_two: 2]
   end
 
 #  test "should create full mocks of module returning fake results" do

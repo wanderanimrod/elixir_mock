@@ -3,18 +3,25 @@ defmodule Mockex do
   Documentation for Mockex.
   """
 
-  defp create_mock(real_module, mock_module_name) do
-    module_defn = quote do
-      @real_functions unquote(real_module).__info__(:functions)
-
-      def f, do: 10
-
-      def functions() do
-        @real_functions
+  defmacro defkv(real_functions) do
+    quote bind_quoted: [real_functions: real_functions] do
+      Enum.map real_functions, fn {fn_name, _arity} ->
+        def unquote(:"#{fn_name}")() do
+          nil
+        end
       end
     end
-    
-    Module.create(mock_module_name, module_defn, Macro.Env.location(__ENV__))
+  end
+
+  defmacro create_mock(real_module, mock_module_name) do
+    quote do
+      defmodule unquote(mock_module_name) do
+        require Mockex
+
+        @real_functions unquote(real_module).__info__(:functions)
+         Mockex.defkv(@real_functions)
+      end
+    end
   end
 
   def of(real_module) do
