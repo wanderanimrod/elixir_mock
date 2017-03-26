@@ -41,7 +41,7 @@ defmodule Mockex do
 #    ast
 #  end
 
-  defmacro defmock(real_module, do: mock_ast) do
+  defmacro defmockof(real_module, do: mock_ast) do
     stubs = extract_stubs(mock_ast)
     mod_name = random_module_name()
 
