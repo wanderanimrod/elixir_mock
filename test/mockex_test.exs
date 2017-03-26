@@ -20,6 +20,8 @@ defmodule MockexTest do
   end
 
 # todo allow definition of some functions on mock
+# todo don't allow function definitions that are not on the real module
+# todo allow multiple mocks from same module with different functions defined
 # todo genserver behaviour of real module is kept in mock
 # todo calls to mock can be inspected
 # todo how does it affect multiple function heads with pattern matching?
