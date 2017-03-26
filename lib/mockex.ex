@@ -58,6 +58,7 @@ defmodule Mockex do
     mod_name = random_module_name()
     quote do
       defmodule unquote(mod_name) do
+        use GenServer
         require Mockex
 
         unquote(mock_ast)
@@ -67,9 +68,16 @@ defmodule Mockex do
           not {fn_name, arity} in unquote(stubs)
         end
         Mockex.defkv(unstubbed_fns)
+
+        def start_link do
+          GenServer.start_link(__MODULE__, [], name: unquote(mod_name))
+        end
+
+        def handle_call(:mockex_hello, _from, state) do
+          {:reply, :hello, state}
+        end
       end
     end
-
   end
 
   def of(real_module) do
