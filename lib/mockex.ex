@@ -26,7 +26,6 @@ defmodule Mockex do
         require Mockex
 
         real_functions = unquote(real_module).__info__(:functions)
-
         Mockex.defkv(real_functions)
       end
     end
@@ -34,13 +33,32 @@ defmodule Mockex do
 
   defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
 
-  defmacro defmock(_real_module, do: mock_ast) do
+  defp extract_stubs({:def, _, [{fn_name, _, _}, _]}) do
+    [fn_name]
+  end
+
+#  defp extract_stubs([ast]) do
+#    ast
+#  end
+
+  defmacro defmock(real_module, do: mock_ast) do
+    stubs = extract_stubs(mock_ast)
     mod_name = random_module_name()
+
     quote do
       defmodule unquote(mod_name) do
+        require Mockex
+
         unquote(mock_ast)
+
+        real_functions = unquote(real_module).__info__(:functions)
+        unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
+          not fn_name in unquote(stubs)
+        end
+        Mockex.defkv(unstubbed_fns)
       end
     end
+
   end
 
   def of(real_module) do

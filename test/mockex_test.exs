@@ -23,9 +23,12 @@ defmodule MockexTest do
   test "should allow definition of mock partially overriding real module functions" do
     {_, mock, _, _} = Mock.defmock RealModule do
       def function_one(_), do: :overriden_f1
+#      def x, do: 10
+#      def x(_), do: 20
     end
+
     assert mock.function_one(1) == :overriden_f1
-#    assert mock.function_two()
+    assert mock.function_two(1, 2) == nil
   end
 
 # todo don't allow function definitions that are not on the real module
