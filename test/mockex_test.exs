@@ -13,9 +13,11 @@ defmodule MockexTest do
     assert mock.function_two(1, 2) == nil
   end
 
-#  test "should leave mocked module intact" do
-#
-#  end
+  test "should leave mocked module intact" do
+    mock = Mock.of RealModule
+    assert mock.function_one(1) == nil
+    assert RealModule.function_one(1) == :real_result_one
+  end
 #
 #  test "should create full mocks of module returning fake results" do
 #    mock = Mock.of RealModule
