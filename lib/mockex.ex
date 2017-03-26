@@ -33,17 +33,25 @@ defmodule Mockex do
 
   defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
 
-  defp extract_stubs({:def, _, [{fn_name, _, args_list}, _]}) do
-    arity = case args_list do
+  defp build_fn_spec(fn_name, args) do
+    arity = case args do
       nil -> 0
       list -> length(list)
     end
-    [{fn_name, arity}]
+    {fn_name, arity}
   end
 
-#  defp extract_stubs([ast]) do
-#    ast
-#  end
+  defp extract_stubs({:def, _, [{fn_name, _, args}, _]}) do
+    [build_fn_spec(fn_name, args)]
+  end
+
+  defp extract_stubs({:__block__, _, content_ast}) do
+    content_ast
+    |> Enum.filter(fn({member_type, _, _}) -> member_type == :def end)
+    |> Enum.map(fn({:def, _, [{fn_name, _, args}, _]}) ->
+      build_fn_spec(fn_name, args)
+    end)
+  end
 
   defmacro defmock_of(real_module, do: mock_ast) do
     stubs = extract_stubs(mock_ast)

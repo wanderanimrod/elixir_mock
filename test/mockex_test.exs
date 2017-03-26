@@ -30,7 +30,15 @@ defmodule MockexTest do
     assert mock.function_two(1, 2) == nil
   end
 
-  # todo: should mock module with more than one function
+  test "should allow more than one function declaration in mock definition" do
+    {_, mock, _, _} = defmock_of RealModule do
+      def function_one(_), do: :overriden_f1
+      def function_two(_, _), do: :overriden_f2
+    end
+
+    assert mock.function_one(1) == :overriden_f1
+    assert mock.function_two(1, 2) == :overriden_f2
+  end
 
   test "should only override function heads with the same arity as the heads specified for the mock" do
     defmodule Real do
