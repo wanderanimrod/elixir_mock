@@ -18,21 +18,12 @@ defmodule MockexTest do
     assert mock.function_one(1) == nil
     assert RealModule.function_one(1) == :real_result_one
   end
-#
-#  test "should create full mocks of module returning fake results" do
-#    mock = Mock.of RealModule
-#    assert mock.functions() == []
-##    assert mock.function_one(1) == nil
-#  end
 
-#  test "should allow for inspection of calls on mock" do
-#    m = mock RealModule
-#    m.function_one(1)
-#    assert called m.function_one(1)
-#  end
-
-#  test "should allow partial stubbing of methods" do
-#
-#  end
+# todo allow definition of some functions on mock
+# todo genserver behaviour of real module is kept in mock
+# todo calls to mock can be inspected
+# todo how does it affect multiple function heads with pattern matching?
+# todo how does it affect functions with guard clauses
+# todo allow partial stubbing and retention of orignal module behaviour
 
 end
