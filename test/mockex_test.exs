@@ -7,12 +7,16 @@ defmodule MockexTest do
     def function_two(_arg1, _arg2), do: :real_result_two
   end
 
-  test "module registration" do
+  test "should create full mock of module with functions returning nil" do
     mock = Mock.of RealModule
-    assert mock.function_one() == nil
-#    assert mock.__info__(:functions) == [function_one: 1, function_two: 2]
+    assert mock.function_one(1) == nil
+    assert mock.function_two(1, 2) == nil
   end
 
+#  test "should leave mocked module intact" do
+#
+#  end
+#
 #  test "should create full mocks of module returning fake results" do
 #    mock = Mock.of RealModule
 #    assert mock.functions() == []
