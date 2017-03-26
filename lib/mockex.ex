@@ -18,8 +18,9 @@ defmodule Mockex do
       defmodule unquote(mock_module_name) do
         require Mockex
 
-        @real_functions unquote(real_module).__info__(:functions)
-         Mockex.defkv(@real_functions)
+        real_functions = unquote(real_module).__info__(:functions)
+        
+        Mockex.defkv(real_functions)
       end
     end
   end
