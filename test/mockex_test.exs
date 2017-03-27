@@ -57,7 +57,9 @@ defmodule MockexTest do
 
   test "should tell if a stubbed method was called on mock" do
     with_mock(mock) = defmock_of RealModule do
-      def function_one(_), do: :overriden_f1
+      def function_one(_) do
+        :overriden_f1
+      end
     end
 
     mock.function_one(:arg)
@@ -66,7 +68,8 @@ defmodule MockexTest do
   end
 
 # todo test that stubbed method was not called.
-
+# todo test that unstubbed methods are inspectable too
+# todo should list present calls when expected call is not found
 # todo
 """
   Improve the verification api. Perhaps use Module.eval_quoted in the `called` macro?
@@ -75,9 +78,9 @@ defmodule MockexTest do
 
 # todo genserver behaviour of real module is kept in mock (stubbing genserver calls to return nil instead of state will cause the mock to blow up)
 # todo how does it affect multiple function heads with pattern matching?
+# todo assert that watcher process dies with the test process (using spawn? or Task.async & Task.await)
 # todo how does it affect functions with guard clauses
-# todo allow retention of original function behaviour for unstubbed functions
 # todo don't allow function definitions that are not on the real module
-# todo simplify mock matching with 'with_mock(mock) = Mock.defmock Real do ... end'
+# todo allow retention of original function behaviour for unstubbed functions | just call @real_module.fn_name(unquote_splicing(args)? or a postwalk
 
 end

@@ -33,6 +33,8 @@ defmodule Mockex do
 
   defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
 
+  defp random_arg_name, do: :"mockex_unignored__#{UUID.uuid4(:hex)}"
+
   defp build_fn_spec(fn_name, args) do
     arity = case args do
       nil -> 0
@@ -53,18 +55,54 @@ defmodule Mockex do
     end)
   end
 
+  defp cleanup_ignored_args(nil), do: nil
+
+  defp cleanup_ignored_args(args) do
+    Enum.map args, fn
+      {:_, context, nil} -> {random_arg_name(), context, nil}
+      used_argument -> used_argument
+    end
+  end
+
+  defp inject_call_recording_lines(lines, fn_name, args) when is_list(lines) do
+    {:__block__, [], storage_call_lines} = quote do
+      watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
+      GenServer.call(watcher_proc, {:record_call, unquote(fn_name), unquote(args)})
+    end
+    [do: {:__block__, [], storage_call_lines ++ lines}]
+  end
+
+  defp inject_call_recording_into({:def, _, [{fn_name, _, args}, _]} = mock_ast) do
+    clean_args = cleanup_ignored_args(args)
+    Macro.postwalk(mock_ast, fn
+      [do: plain_value]            -> inject_call_recording_lines([plain_value], fn_name, clean_args)
+      [do: {:__block__, _, lines}] -> inject_call_recording_lines(lines, fn_name, clean_args)
+      {^fn_name, context, _}        -> {fn_name, context, clean_args}
+      anything_else -> anything_else
+    end)
+  end
+
+  defp inject_call_recording_into({:__block__, _, _} = block) do
+    Macro.postwalk block, fn
+      {:def, _, _, _} = fn_ast -> inject_call_recording_into(fn_ast)
+      anything_else            -> anything_else
+    end
+  end
+
   defmacro defmock_of(real_module, do: mock_ast) do
     stubs = extract_stubs(mock_ast)
-    mod_name = random_module_name()
+    mock_name = random_module_name()
+
     quote do
 
-      {:ok, _pid} = MockWatcher.start_link(unquote(mod_name))
+      {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
 
-      defmodule unquote(mod_name) do
+      defmodule unquote(mock_name) do
         require Mockex
 
-        unquote(mock_ast)
+        unquote(inject_call_recording_into(mock_ast))
 
+        # todo this can move up (outside quote like `stubs = extract_stubs(..)`)
         real_functions = unquote(real_module).__info__(:functions)
         unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
           not {fn_name, arity} in unquote(stubs)
@@ -72,8 +110,8 @@ defmodule Mockex do
         Mockex.inject_empty_stubs(unstubbed_fns)
 
         def __mockex__call_exists(fn_name, args) do
-          watcher = MockWatcher.get_watcher_name_for(unquote(mod_name))
-          GenServer.call(watcher, {:call_exists, fn_name, args})
+          watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
+          GenServer.call(watcher_proc, {:call_exists, fn_name, args})
         end
 
       end
@@ -89,7 +127,7 @@ defmodule Mockex do
   defmacro called(mock_module, call) do
     {fn_name, _, args} = call
     quote do
-      unquote(mock_module).__mockex__call_exists(unquote(fn_name),unquote(args))
+      unquote(mock_module).__mockex__call_exists(unquote(fn_name), unquote(args))
     end
   end
 
