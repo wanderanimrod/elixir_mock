@@ -67,6 +67,26 @@ defmodule MockexTest do
     assert called mock, function_one(:arg)
   end
 
+  test "should tell if stubbed method was not called when a call with different args from what is expected exists" do
+    with_mock(mock) = defmock_of RealModule do
+    def function_one(_) do
+        :overriden_f1
+      end
+    end
+
+    mock.function_one(:arg)
+
+    assert not called mock, function_one(:other_arg)
+  end
+
+#  test "should tell if a stubbed method was not called on a mock" do
+#    mock = Mock.of RealModule
+#    assert not called mock, function_one(1)
+#    assert not called mock, function_two(1, 2)
+#  end
+
+
+
 # todo test that stubbed method was not called.
 # todo test that unstubbed methods are inspectable too
 # todo should list present calls when expected call is not found
