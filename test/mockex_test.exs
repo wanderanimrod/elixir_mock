@@ -55,9 +55,23 @@ defmodule MockexTest do
     assert mock.x(:some_arg) == nil
   end
 
+  test "should tell if a stubbed method was called on mock" do
+    {_, mock, _, _} = defmock_of RealModule do
+      def function_one(_), do: :overriden_f1
+    end
 
-# todo calls to mock can be inspected
+    mock.function_one(:arg)
 
+    assert called mock, function_one(:arg)
+  end
+
+# todo test that stubbed method was not called.
+
+# todo
+"""
+  Improve the verification api. Perhaps use Module.eval_quoted in the `called` macro?
+  - The api we want is: `assert called mock.function_one(:arg)`
+"""
 
 # todo genserver behaviour of real module is kept in mock (stubbing genserver calls to return nil instead of state will cause the mock to blow up)
 # todo how does it affect multiple function heads with pattern matching?

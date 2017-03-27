@@ -57,8 +57,10 @@ defmodule Mockex do
     stubs = extract_stubs(mock_ast)
     mod_name = random_module_name()
     quote do
+
+      {:ok, _pid} = MockWatcher.start_link(unquote(mod_name))
+
       defmodule unquote(mod_name) do
-        use GenServer
         require Mockex
 
         unquote(mock_ast)
@@ -69,13 +71,11 @@ defmodule Mockex do
         end
         Mockex.inject_empty_stubs(unstubbed_fns)
 
-        def start_link do
-          GenServer.start_link(__MODULE__, [], name: unquote(mod_name))
+        def __mockex__call_exists(fn_name, args) do
+          watcher = MockWatcher.get_watcher_name_for(unquote(mod_name))
+          GenServer.call(watcher, {:call_exists, fn_name, args})
         end
 
-        def handle_call(:mockex_hello, _from, state) do
-          {:reply, :hello, state}
-        end
       end
     end
   end
@@ -86,4 +86,10 @@ defmodule Mockex do
     mod_name
   end
 
+  defmacro called(mock_module, call) do
+    {fn_name, _, args} = call
+    quote do
+      unquote(mock_module).__mockex__call_exists(unquote(fn_name),unquote(args))
+    end
+  end
 end
