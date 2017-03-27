@@ -92,4 +92,10 @@ defmodule Mockex do
       unquote(mock_module).__mockex__call_exists(unquote(fn_name),unquote(args))
     end
   end
+
+  defmacro with_mock(mock_var_name) do
+    quote do
+      {_, unquote(mock_var_name), _, _}
+    end
+  end
 end

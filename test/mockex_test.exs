@@ -23,7 +23,7 @@ defmodule MockexTest do
   end
 
   test "should allow definition of mock partially overriding real module functions" do
-    {_, mock, _, _} = defmock_of RealModule do
+    with_mock(mock) = defmock_of RealModule do
       def function_one(_), do: :overriden_f1
     end
 
@@ -32,7 +32,7 @@ defmodule MockexTest do
   end
 
   test "should allow more than one function declaration in mock definition" do
-    {_, mock, _, _} = defmock_of RealModule do
+    with_mock(mock) = defmock_of RealModule do
       def function_one(_), do: :overriden_f1
       def function_two(_, _), do: :overriden_f2
     end
@@ -47,7 +47,7 @@ defmodule MockexTest do
       def x(_arg), do: {:arity, 1}
     end
 
-    {_, mock, _, _} = defmock_of Real do
+    with_mock(mock) = defmock_of Real do
       def x, do: :overriden_x
     end
 
@@ -56,7 +56,7 @@ defmodule MockexTest do
   end
 
   test "should tell if a stubbed method was called on mock" do
-    {_, mock, _, _} = defmock_of RealModule do
+    with_mock(mock) = defmock_of RealModule do
       def function_one(_), do: :overriden_f1
     end
 
