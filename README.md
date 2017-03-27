@@ -1,4 +1,4 @@
-# Mockex [DO NOT USE]
+# Mockex [DO NOT USE YET]
 
 Sanitary mock objects for elixir, configurable per test and inspectable
 
