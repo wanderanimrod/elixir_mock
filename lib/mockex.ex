@@ -41,10 +41,7 @@ defmodule Mockex do
 
         unquote(unstubbed_fns_ast(real_module, mock_ast))
 
-        def __mockex__call_exists(fn_name, args) do
-          watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
-          GenServer.call(watcher_proc, {:call_exists, fn_name, args})
-        end
+        Mockex.inject_mockex_utlities()
       end
     end
   end
@@ -72,10 +69,7 @@ defmodule Mockex do
         real_functions = unquote(real_module).__info__(:functions)
         Mockex.inject_empty_stubs(real_functions)
 
-        def __mockex__call_exists(fn_name, args) do
-          watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
-          GenServer.call(watcher_proc, {:call_exists, fn_name, args})
-        end
+        Mockex.inject_mockex_utlities()
       end
     end
   end
@@ -84,6 +78,15 @@ defmodule Mockex do
     mod_name = random_module_name()
     create_mock(real_module, mod_name)
     mod_name
+  end
+
+  defmacro inject_mockex_utlities do
+    quote do
+      def __mockex__call_exists(fn_name, args) do
+          watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
+          GenServer.call(watcher_proc, {:call_exists, fn_name, args})
+        end
+    end
   end
 
   defp unstubbed_fns_ast(real_module, mock_ast) do
