@@ -1,6 +1,7 @@
 defmodule MockexTest.CallVerification do
   use ExUnit.Case, async: true
 
+  require Logger
   require Mockex
   import Mockex
 
@@ -41,4 +42,24 @@ defmodule MockexTest.CallVerification do
     refute_called mock, function_one(10)
   end
 
+  @tag skip: "watcher processes are not dying after parent dies despite being started with start_link"
+  test "mock watcher should die with the test process" do
+    test_fn = fn ->
+      mock = mock_of RealModule
+      watcher_pid = MockWatcher.get_watcher_name_for(mock) |> Process.whereis()
+      assert Process.alive? watcher_pid
+      watcher_pid
+    end
+
+    test_task = Task.async(test_fn)
+    watcher_pid = Task.await(test_task)
+
+    Logger.debug "
+    test_proc = #{inspect self()}
+    watcher_proc = #{inspect watcher_pid}
+    task_details = #{inspect test_task}"
+
+    refute Process.alive? test_task.pid
+    refute Process.alive? watcher_pid
+  end
 end
