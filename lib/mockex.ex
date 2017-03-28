@@ -20,23 +20,21 @@ defmodule Mockex do
     end
   end
 
-  defmacro create_mock(real_module, mock_module_name) do
+  defmacro stub_unstubbed_fns(real_module, mock_ast) do
+    stubs = extract_stubs(mock_ast)
     quote do
-      defmodule unquote(mock_module_name) do
-        require Mockex
-
-        real_functions = unquote(real_module).__info__(:functions)
-        Mockex.inject_empty_stubs(real_functions)
+      real_functions = unquote(real_module).__info__(:functions)
+      unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
+        not {fn_name, arity} in unquote(stubs)
       end
+      Mockex.inject_empty_stubs(unstubbed_fns)
     end
   end
 
   defmacro defmock_of(real_module, do: mock_ast) do
-    stubs = extract_stubs(mock_ast)
     mock_name = random_module_name()
 
     quote do
-
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
 
       defmodule unquote(mock_name) do
@@ -44,18 +42,12 @@ defmodule Mockex do
 
         unquote(inject_call_recording_into(mock_ast))
 
-        # todo this can move up (outside quote like `stubs = extract_stubs(..)`)
-        real_functions = unquote(real_module).__info__(:functions)
-        unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
-          not {fn_name, arity} in unquote(stubs)
-        end
-        Mockex.inject_empty_stubs(unstubbed_fns)
+        Mockex.stub_unstubbed_fns(unquote(real_module), unquote(mock_ast))
 
         def __mockex__call_exists(fn_name, args) do
           watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
           GenServer.call(watcher_proc, {:call_exists, fn_name, args})
         end
-
       end
     end
   end
@@ -70,6 +62,17 @@ defmodule Mockex do
   defmacro with_mock(mock_var_name) do
     quote do
       {_, unquote(mock_var_name), _, _}
+    end
+  end
+
+  defmacro create_mock(real_module, mock_module_name) do
+    quote do
+      defmodule unquote(mock_module_name) do
+        require Mockex
+
+        real_functions = unquote(real_module).__info__(:functions)
+        Mockex.inject_empty_stubs(real_functions)
+      end
     end
   end
 
