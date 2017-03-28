@@ -79,18 +79,18 @@ defmodule MockexTest do
     assert not called mock, function_one(:other_arg)
   end
 
-#  test "should tell if a stubbed method was not called on a mock" do
-#    mock = Mock.of RealModule
-#    assert not called mock, function_one(1)
-#    assert not called mock, function_two(1, 2)
-#  end
+  test "implicitly stubbed methods should be inspectable too" do
+    mock = Mock.of RealModule
+    mock.function_one(1)
+    assert called mock, function_one(1)
+    assert not called mock, function_two(1, 2)
+  end
 
 
 
 # todo test that stubbed method was not called.
 # todo test that unstubbed methods are inspectable too
 # todo should list present calls when expected call is not found
-# todo
 """
   Improve the verification api. Perhaps use Module.eval_quoted in the `called` macro?
   - The api we want is: `assert called mock.function_one(:arg)`
@@ -102,5 +102,5 @@ defmodule MockexTest do
 # todo how does it affect functions with guard clauses
 # todo don't allow function definitions that are not on the real module
 # todo allow retention of original function behaviour for unstubbed functions | just call @real_module.fn_name(unquote_splicing(args)? or a postwalk
-
+# todo add some matchers any(type)
 end

@@ -14,6 +14,8 @@ defmodule Mockex do
         end
 
         def unquote(:"#{fn_name}")(unquote_splicing(args)) do
+          watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
+          GenServer.call(watcher_proc, {:record_call, unquote(fn_name), unquote(args)})
           nil
         end
       end
@@ -56,11 +58,17 @@ defmodule Mockex do
 
   defmacro create_mock(real_module, mock_module_name) do
     quote do
+      {:ok, _pid} = MockWatcher.start_link(unquote(mock_module_name))
       defmodule unquote(mock_module_name) do
         require Mockex
 
         real_functions = unquote(real_module).__info__(:functions)
         Mockex.inject_empty_stubs(real_functions)
+
+        def __mockex__call_exists(fn_name, args) do
+          watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
+          GenServer.call(watcher_proc, {:call_exists, fn_name, args})
+        end
       end
     end
   end
@@ -115,15 +123,11 @@ defmodule Mockex do
     end
   end
 
-  defp fn_call_recording_ast(fn_name, args) do
-    quote do
+  defp inject_call_recording_lines(lines, fn_name, args) when is_list(lines) do
+    {:__block__, [], storage_call_lines} = quote do
       watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
       GenServer.call(watcher_proc, {:record_call, unquote(fn_name), unquote(args)})
     end
-  end
-
-  defp inject_call_recording_lines(lines, fn_name, args) when is_list(lines) do
-    {:__block__, [], storage_call_lines} = fn_call_recording_ast(fn_name, args)
     [do: {:__block__, [], storage_call_lines ++ lines}]
   end
 
