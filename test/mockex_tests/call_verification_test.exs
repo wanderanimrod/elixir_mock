@@ -42,6 +42,7 @@ defmodule MockexTest.CallVerification do
     refute_called mock, function_one(10)
   end
 
+  # todo assert that watcher process dies with the test process (using spawn? or Task.async & Task.await)
   @tag skip: "watcher processes are not dying after parent dies despite being started with start_link"
   test "mock watcher should die with the test process" do
     test_fn = fn ->

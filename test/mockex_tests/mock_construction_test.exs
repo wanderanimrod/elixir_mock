@@ -61,7 +61,6 @@ defmodule MockexTest.Construction do
     assert normal_nil_mock.function_two(10, 20) == empty_body_mock.function_two(10, 20)
   end
 
-# todo assert that watcher process dies with the test process (using spawn? or Task.async & Task.await)
 # todo how does it affect multiple function heads with pattern matching?
 # todo how does it affect functions with guard clauses
 # todo don't allow function definitions that are not on the real module
