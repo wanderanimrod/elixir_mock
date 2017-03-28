@@ -20,17 +20,6 @@ defmodule Mockex do
     end
   end
 
-  defmacro stub_unstubbed_fns(real_module, mock_ast) do
-    stubs = extract_stubs(mock_ast)
-    quote do
-      real_functions = unquote(real_module).__info__(:functions)
-      unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
-        not {fn_name, arity} in unquote(stubs)
-      end
-      Mockex.inject_empty_stubs(unstubbed_fns)
-    end
-  end
-
   defmacro defmock_of(real_module, do: mock_ast) do
     mock_name = random_module_name()
 
@@ -42,7 +31,7 @@ defmodule Mockex do
 
         unquote(inject_call_recording_into(mock_ast))
 
-        Mockex.stub_unstubbed_fns(unquote(real_module), unquote(mock_ast))
+        unquote(unstubbed_fns_ast(real_module, mock_ast))
 
         def __mockex__call_exists(fn_name, args) do
           watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
@@ -82,6 +71,17 @@ defmodule Mockex do
     mod_name
   end
 
+  defp unstubbed_fns_ast(real_module, mock_ast) do
+    stubs = extract_stubs(mock_ast)
+    quote do
+      real_functions = unquote(real_module).__info__(:functions)
+      unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
+        not {fn_name, arity} in unquote(stubs)
+      end
+      Mockex.inject_empty_stubs(unstubbed_fns)
+    end
+  end
+
   defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
 
   defp random_arg_name, do: :"mockex_unignored__#{UUID.uuid4(:hex)}"
@@ -115,11 +115,15 @@ defmodule Mockex do
     end
   end
 
-  defp inject_call_recording_lines(lines, fn_name, args) when is_list(lines) do
-    {:__block__, [], storage_call_lines} = quote do
+  defp fn_call_recording_ast(fn_name, args) do
+    quote do
       watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
       GenServer.call(watcher_proc, {:record_call, unquote(fn_name), unquote(args)})
     end
+  end
+
+  defp inject_call_recording_lines(lines, fn_name, args) when is_list(lines) do
+    {:__block__, [], storage_call_lines} = fn_call_recording_ast(fn_name, args)
     [do: {:__block__, [], storage_call_lines ++ lines}]
   end
 
