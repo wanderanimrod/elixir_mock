@@ -3,7 +3,6 @@ defmodule MockexTest do
 
   require Mockex
   import Mockex
-  alias Mockex, as: Mock
 
   defmodule RealModule do
     def function_one(_arg), do: :real_result_one
@@ -11,13 +10,13 @@ defmodule MockexTest do
   end
 
   test "should create full mock of module with functions returning nil" do
-    mock = Mock.of RealModule
+    mock = mock_of RealModule
     assert mock.function_one(1) == nil
     assert mock.function_two(1, 2) == nil
   end
 
   test "should leave mocked module intact" do
-    mock = Mock.of RealModule
+    mock = mock_of RealModule
     assert mock.function_one(1) == nil
     assert RealModule.function_one(1) == :real_result_one
   end
@@ -80,14 +79,14 @@ defmodule MockexTest do
   end
 
   test "implicitly stubbed methods should be inspectable too" do
-    mock = Mock.of RealModule
+    mock = mock_of RealModule
     mock.function_one(1)
     assert called mock, function_one(1)
     assert not called mock, function_two(1, 2)
   end
 
   test "should create default nil-mock when mock body is empty" do
-    normal_nil_mock = Mock.of RealModule
+    normal_nil_mock = mock_of RealModule
     with_mock(empty_body_mock) = defmock_of RealModule do end
     assert normal_nil_mock.function_one(10) == empty_body_mock.function_one(10)
     assert normal_nil_mock.function_two(10, 20) == empty_body_mock.function_two(10, 20)

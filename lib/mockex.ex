@@ -1,7 +1,10 @@
 defmodule Mockex do
   @moduledoc """
   Documentation for Mockex.
+  # TODO: We have too many public macros that are supposed to be private.
+  Move ast creation to functions as much as possible
   """
+
 
   require Logger
 
@@ -74,7 +77,7 @@ defmodule Mockex do
     end
   end
 
-  def of(real_module) do
+  def mock_of(real_module) do
     mod_name = random_module_name()
     create_mock(real_module, mod_name)
     mod_name
