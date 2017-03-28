@@ -105,6 +105,26 @@ defmodule MockexTest do
     end
   end
 
+  test "should provide user friendly message when unexpected call is found" do
+    mock = mock_of RealModule
+    expected_message = "\n\nDid not expect function_one(1) to be called but it was.\n"
+
+    mock.function_one(1)
+
+    assert_raise ExUnit.AssertionError, expected_message, fn ->
+      refute_called mock, function_one(1)
+    end
+  end
+
+  test "should provide user friendly message when expected call is not found on mock without calls" do
+    mock = mock_of RealModule
+    expected_message = "\n\nExpected function_one(:arg) to have been called but it was not found among calls: \n      * []\n"
+
+    assert_raise ExUnit.AssertionError, expected_message, fn ->
+      assert_called mock, function_one(:arg)
+    end
+  end
+
 # todo assert that watcher process dies with the test process (using spawn? or Task.async & Task.await)
 # todo how does it affect multiple function heads with pattern matching?
 # todo how does it affect functions with guard clauses
