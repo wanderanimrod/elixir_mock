@@ -31,6 +31,54 @@ defmodule Mockex do
     end
   end
 
+  defmacro defmock_of(real_module, do: mock_ast) do
+    stubs = extract_stubs(mock_ast)
+    mock_name = random_module_name()
+
+    quote do
+
+      {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
+
+      defmodule unquote(mock_name) do
+        require Mockex
+
+        unquote(inject_call_recording_into(mock_ast))
+
+        # todo this can move up (outside quote like `stubs = extract_stubs(..)`)
+        real_functions = unquote(real_module).__info__(:functions)
+        unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
+          not {fn_name, arity} in unquote(stubs)
+        end
+        Mockex.inject_empty_stubs(unstubbed_fns)
+
+        def __mockex__call_exists(fn_name, args) do
+          watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
+          GenServer.call(watcher_proc, {:call_exists, fn_name, args})
+        end
+
+      end
+    end
+  end
+
+  defmacro called(mock_module, call) do
+    {fn_name, _, args} = call
+    quote do
+      unquote(mock_module).__mockex__call_exists(unquote(fn_name), unquote(args))
+    end
+  end
+
+  defmacro with_mock(mock_var_name) do
+    quote do
+      {_, unquote(mock_var_name), _, _}
+    end
+  end
+
+  def of(real_module) do
+    mod_name = random_module_name()
+    create_mock(real_module, mod_name)
+    mod_name
+  end
+
   defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
 
   defp random_arg_name, do: :"mockex_unignored__#{UUID.uuid4(:hex)}"
@@ -89,51 +137,4 @@ defmodule Mockex do
     end
   end
 
-  defmacro defmock_of(real_module, do: mock_ast) do
-    stubs = extract_stubs(mock_ast)
-    mock_name = random_module_name()
-
-    quote do
-
-      {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
-
-      defmodule unquote(mock_name) do
-        require Mockex
-
-        unquote(inject_call_recording_into(mock_ast))
-
-        # todo this can move up (outside quote like `stubs = extract_stubs(..)`)
-        real_functions = unquote(real_module).__info__(:functions)
-        unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
-          not {fn_name, arity} in unquote(stubs)
-        end
-        Mockex.inject_empty_stubs(unstubbed_fns)
-
-        def __mockex__call_exists(fn_name, args) do
-          watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
-          GenServer.call(watcher_proc, {:call_exists, fn_name, args})
-        end
-
-      end
-    end
-  end
-
-  def of(real_module) do
-    mod_name = random_module_name()
-    create_mock(real_module, mod_name)
-    mod_name
-  end
-
-  defmacro called(mock_module, call) do
-    {fn_name, _, args} = call
-    quote do
-      unquote(mock_module).__mockex__call_exists(unquote(fn_name), unquote(args))
-    end
-  end
-
-  defmacro with_mock(mock_var_name) do
-    quote do
-      {_, unquote(mock_var_name), _, _}
-    end
-  end
 end
