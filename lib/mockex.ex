@@ -22,9 +22,15 @@ defmodule Mockex do
     end
   end
 
+  defmacro defmock_of(real_module, do: nil) do
+    mock_name = random_module_name()
+    quote do
+      Mockex.create_mock(unquote(real_module), unquote(mock_name))
+    end
+  end
+
   defmacro defmock_of(real_module, do: mock_ast) do
     mock_name = random_module_name()
-
     quote do
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
 
@@ -59,6 +65,7 @@ defmodule Mockex do
   defmacro create_mock(real_module, mock_module_name) do
     quote do
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_module_name))
+
       defmodule unquote(mock_module_name) do
         require Mockex
 
