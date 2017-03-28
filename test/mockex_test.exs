@@ -63,27 +63,27 @@ defmodule MockexTest do
 
     mock.function_one(:arg)
 
-    assert called mock, function_one(:arg)
+    assert_called mock, function_one(:arg)
   end
 
   test "should verify implicitly stubbed functions too" do
     mock = mock_of RealModule
     mock.function_one(1)
-    assert called mock, function_one(1)
-    assert not called mock, function_two(1, 2)
+    assert_called mock, function_one(1)
+    refute_called mock, function_two(1, 2)
   end
 
   test "should only successfully verify function call with exact arguments" do
     mock = mock_of RealModule
     mock.function_one(:arg)
-    assert not called mock, function_one(:other_arg)
+    refute_called mock, function_one(:other_arg)
   end
 
   test "should verify that explicitly stubbed function was not called" do
     with_mock(mock) = defmock_of RealModule do
       def function_one(_), do: 10
     end
-    assert not called mock, function_one(10)
+    refute_called mock, function_one(10)
   end
 
   test "should create default nil-mock when mock body is empty" do
@@ -93,19 +93,27 @@ defmodule MockexTest do
     assert normal_nil_mock.function_two(10, 20) == empty_body_mock.function_two(10, 20)
   end
 
-# todo test that stubbed function was not called.
-# todo test that unstubbed functions are inspectable too
-# todo should list present calls when expected call is not found
-"""
-  Improve the verification api. Perhaps use Module.eval_quoted in the `called` macro?
-  - The api we want is: `assert called mock.function_one(:arg)`
-"""
+  test "should provide info about calls when call is not found among existing calls" do
+    mock = mock_of RealModule
+    expected_message = "\n\nExpected function_one(:arg) to have been called but it was not found among calls: \n      * function_one(:some_arg)\n      * function_two(:some_arg, :other_arg)\n"
 
-# todo genserver behaviour of real module is kept in mock (stubbing genserver calls to return nil instead of state will cause the mock to blow up)
-# todo how does it affect multiple function heads with pattern matching?
+    mock.function_one(:some_arg)
+    mock.function_two(:some_arg, :other_arg)
+
+    assert_raise ExUnit.AssertionError, expected_message, fn ->
+      assert_called mock, function_one(:arg)
+    end
+  end
+
 # todo assert that watcher process dies with the test process (using spawn? or Task.async & Task.await)
+# todo how does it affect multiple function heads with pattern matching?
 # todo how does it affect functions with guard clauses
 # todo don't allow function definitions that are not on the real module
 # todo allow retention of original function behaviour for unstubbed functions | just call @real_module.fn_name(unquote_splicing(args)? or a postwalk
 # todo add some matchers any(type)
+"""
+  todo:
+  Improve the verification api. Perhaps use Module.eval_quoted in the `called` macro?
+  - The api we want is: `assert_called mock.function_one(:arg)`
+"""
 end

@@ -5,7 +5,6 @@ defmodule Mockex do
   Move ast creation to functions as much as possible
   """
 
-
   require Logger
 
   defmacro inject_empty_stubs(real_functions) do
@@ -49,10 +48,22 @@ defmodule Mockex do
     end
   end
 
-  defmacro called(mock_module, call) do
+  defmacro refute_called(mock_module, call) do
     {fn_name, _, args} = call
     quote do
-      unquote(mock_module).__mockex__call_exists(unquote(fn_name), unquote(args))
+      {called, _existing_calls} = unquote(mock_module).__mockex__call_exists(unquote(fn_name), unquote(args))
+      call_string = build_call_string(unquote(fn_name), unquote(args))
+      refute called, "Did not expect #{call_string} to be called but it was."
+    end
+  end
+
+  defmacro assert_called(mock_module, call) do
+    {fn_name, _, args} = call
+    quote do
+      {called, existing_calls} = unquote(mock_module).__mockex__call_exists(unquote(fn_name), unquote(args))
+      call_string = build_call_string(unquote(fn_name), unquote(args))
+      existing_calls_string = build_calls_string(existing_calls)
+      assert called, "Expected #{call_string} to have been called but it was not found among calls: \n * #{existing_calls_string}"
     end
   end
 
@@ -81,6 +92,19 @@ defmodule Mockex do
     mod_name = random_module_name()
     create_mock(real_module, mod_name)
     mod_name
+  end
+
+  def build_call_string(fn_name, args) do
+    args_string = args |> Enum.map(&(inspect &1)) |> Enum.join(", ")
+    "#{fn_name}(#{args_string})"
+  end
+
+  def build_calls_string([]), do: "#{inspect []}"
+
+  def build_calls_string(calls) do
+    calls
+    |> Enum.map(fn {func, args_list} -> build_call_string(func, args_list) end)
+    |> Enum.join("\n * ")
   end
 
   defmacro inject_mockex_utlities do

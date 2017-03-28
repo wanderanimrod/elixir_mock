@@ -13,7 +13,7 @@ defmodule MockWatcher do
 
   def handle_call({:call_exists, fn_name, args}, _from, state) do
     call_exists = {fn_name, args} in state.calls
-    {:reply, call_exists, state}
+    {:reply, {call_exists, state.calls}, state}
   end
 
   def get_watcher_name_for(mock_name) do
