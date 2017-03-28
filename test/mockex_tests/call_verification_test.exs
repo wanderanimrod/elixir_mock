@@ -41,11 +41,4 @@ defmodule MockexTest.CallVerification do
     refute_called mock, function_one(10)
   end
 
-  test "should create default nil-mock when mock body is empty" do
-    normal_nil_mock = mock_of RealModule
-    with_mock(empty_body_mock) = defmock_of RealModule do end
-    assert normal_nil_mock.function_one(10) == empty_body_mock.function_one(10)
-    assert normal_nil_mock.function_two(10, 20) == empty_body_mock.function_two(10, 20)
-  end
-
 end
