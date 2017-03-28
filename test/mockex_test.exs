@@ -54,7 +54,7 @@ defmodule MockexTest do
     assert mock.x(:some_arg) == nil
   end
 
-  test "should tell if a stubbed method was called on mock" do
+  test "should tell if a stubbed function was called on mock" do
     with_mock(mock) = defmock_of RealModule do
       def function_one(_) do
         :overriden_f1
@@ -66,23 +66,24 @@ defmodule MockexTest do
     assert called mock, function_one(:arg)
   end
 
-  test "should tell if stubbed method was not called when a call with different args from what is expected exists" do
-    with_mock(mock) = defmock_of RealModule do
-    def function_one(_) do
-        :overriden_f1
-      end
-    end
-
-    mock.function_one(:arg)
-
-    assert not called mock, function_one(:other_arg)
-  end
-
-  test "implicitly stubbed methods should be inspectable too" do
+  test "should verify implicitly stubbed functions too" do
     mock = mock_of RealModule
     mock.function_one(1)
     assert called mock, function_one(1)
     assert not called mock, function_two(1, 2)
+  end
+
+  test "should only successfully verify function call with exact arguments" do
+    mock = mock_of RealModule
+    mock.function_one(:arg)
+    assert not called mock, function_one(:other_arg)
+  end
+
+  test "should verify that explicitly stubbed function was not called" do
+    with_mock(mock) = defmock_of RealModule do
+      def function_one(_), do: 10
+    end
+    assert not called mock, function_one(10)
   end
 
   test "should create default nil-mock when mock body is empty" do
@@ -92,10 +93,8 @@ defmodule MockexTest do
     assert normal_nil_mock.function_two(10, 20) == empty_body_mock.function_two(10, 20)
   end
 
-
-
-# todo test that stubbed method was not called.
-# todo test that unstubbed methods are inspectable too
+# todo test that stubbed function was not called.
+# todo test that unstubbed functions are inspectable too
 # todo should list present calls when expected call is not found
 """
   Improve the verification api. Perhaps use Module.eval_quoted in the `called` macro?
