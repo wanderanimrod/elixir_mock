@@ -38,6 +38,7 @@ defmodule Mockex do
   end
 
   defmacro defmock_of(real_module, do: mock_ast) do
+    call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
     mock_name = random_module_name()
     quote do
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
@@ -47,7 +48,7 @@ defmodule Mockex do
 
         unquote(mock_ast |> inject_mockex_utilities |> apply_stub_call_throughs(real_module))
 
-        unquote(unstubbed_fns_ast(real_module, mock_ast))
+        unquote(unstubbed_fns_ast(real_module, mock_ast, call_through_unstubbed_fns))
 
         Mockex.inject_mockex_utilities()
       end
@@ -130,13 +131,23 @@ defmodule Mockex do
     end
   end
 
-  defp unstubbed_fns_ast(real_module, mock_ast) do
+  defp should_call_through_unstubbed_functions({:__block__, _, contents}) do
+    contents
+    |> Enum.filter(fn {member_type, _, _} -> member_type == :@ end)
+    |> Enum.any?(fn {_, _, [{attr_name, _, [attr_val]}]} ->
+      attr_name == :call_through_undeclared_functions and attr_val == true
+    end)
+  end
+
+  defp should_call_through_unstubbed_functions(_non_block_mock), do: false
+
+  defp unstubbed_fns_ast(real_module, mock_ast, call_through) do
     stubs = extract_stubs(mock_ast)
     quote do
       unstubbed_fns =
         unquote(real_module).__info__(:functions)
         |> Enum.filter(fn {fn_name, arity} -> not {fn_name, arity} in unquote(stubs) end)
-        |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, false} end)
+        |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through)} end)
 
       Mockex.inject_monitored_real_functions(unquote(real_module), unstubbed_fns)
     end
