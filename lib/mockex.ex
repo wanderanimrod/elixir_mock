@@ -216,7 +216,6 @@ defmodule Mockex do
 
   defp inject_mockex_utilities({:__block__, _, _} = block) do
     Macro.postwalk block, fn
-      {:def, _, _, _} = fn_ast -> inject_mockex_utilities(fn_ast)
       {:def, _, _} = fn_ast    -> inject_mockex_utilities(fn_ast)
       anything_else            -> anything_else
     end
