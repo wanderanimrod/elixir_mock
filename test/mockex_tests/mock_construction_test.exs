@@ -29,16 +29,16 @@ defmodule MockexTest.Construction do
     assert mock.function_one(1) == RealModule.function_one(1)
     assert mock.function_two(1, 2) == nil
   end
-#
-#  test "should allow creation of mock with all functions calling the real module" do
-#    mock = mock_of RealModule, :call_through_all
-#    assert mock.function_one(1) == RealModule.function_one(1)
-#    assert mock.function_two(1, 2) == RealModule.function_two(1, 2)
-#  end
+
+  test "should allow creation of mock with all functions calling the real module" do
+    mock = mock_of RealModule, :call_through
+    assert mock.function_one(1) == RealModule.function_one(1)
+    assert mock.function_two(1, 2) == RealModule.function_two(1, 2)
+  end
   
 #  test "should allow creation of mock with all unspecified functions calling through" do
 #    with_mock(mock) = defmock_of RealModule do
-#      @keep_undeclared_functions true
+#      @call_through_undeclared_functions true
 #      def function_one(_), do: :overridden_f1
 #    end
 #    assert mock.function_one(1) == :overridden_f1

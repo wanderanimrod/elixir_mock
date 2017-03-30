@@ -9,7 +9,7 @@ defmodule Mockex do
 
   defmacro inject_monitored_real_functions(real_module, real_functions) do
     quote bind_quoted: [real_module: real_module, real_functions: real_functions] do
-      Enum.map real_functions, fn {fn_name, arity} ->
+      Enum.map real_functions, fn {fn_name, arity, call_through} ->
         args = case arity do
           0 -> []
           _ -> 1..arity |> Enum.map(&(Macro.var(:"arg_#{&1}", __MODULE__)))
@@ -18,8 +18,13 @@ defmodule Mockex do
         def unquote(:"#{fn_name}")(unquote_splicing(args)) do
           watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
           GenServer.call(watcher_proc, {:record_call, unquote(fn_name), unquote(args)})
-#          unquote(real_module).unquote(fn_name)(unquote_splicing(args))
           nil
+          if unquote(call_through) do
+            unquote(real_module).unquote(fn_name)(unquote_splicing(args))
+          else
+            nil
+          end
+
         end
       end
     end
@@ -33,7 +38,6 @@ defmodule Mockex do
   end
 
   defmacro defmock_of(real_module, do: mock_ast) do
-#    Logger.debug inspect(mock_ast)
     mock_name = random_module_name()
     quote do
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
@@ -50,14 +54,17 @@ defmodule Mockex do
     end
   end
 
-  defmacro create_mock(real_module, mock_module_name) do
+  defmacro create_mock(real_module, mock_module_name, call_through \\ false) do
     quote do
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_module_name))
 
       defmodule unquote(mock_module_name) do
         require Mockex
 
-        real_functions = unquote(real_module).__info__(:functions)
+        real_functions =
+          unquote(real_module).__info__(:functions)
+          |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through)} end)
+
         Mockex.inject_monitored_real_functions(unquote(real_module), real_functions)
 
         Mockex.inject_mockex_utilities()
@@ -65,9 +72,14 @@ defmodule Mockex do
     end
   end
 
-  def mock_of(real_module) do
+  def mock_of(real_module, call_through \\ false)
+
+  def mock_of(real_module, :call_through),
+    do: mock_of(real_module, true)
+
+  def mock_of(real_module, call_through) do
     mod_name = random_module_name()
-    create_mock(real_module, mod_name)
+    create_mock(real_module, mod_name, call_through)
     mod_name
   end
 
@@ -121,10 +133,11 @@ defmodule Mockex do
   defp unstubbed_fns_ast(real_module, mock_ast) do
     stubs = extract_stubs(mock_ast)
     quote do
-      real_functions = unquote(real_module).__info__(:functions)
-      unstubbed_fns = Enum.filter real_functions, fn {fn_name, arity} ->
-        not {fn_name, arity} in unquote(stubs)
-      end
+      unstubbed_fns =
+        unquote(real_module).__info__(:functions)
+        |> Enum.filter(fn {fn_name, arity} -> not {fn_name, arity} in unquote(stubs) end)
+        |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, false} end)
+
       Mockex.inject_monitored_real_functions(unquote(real_module), unstubbed_fns)
     end
   end
@@ -198,7 +211,7 @@ defmodule Mockex do
     end
   end
 
-  defp apply_call_throughs({:__block__, _, _} = block, real_module) do
+  defp apply_call_throughs({:__block__, _, _} = block, _real_module) do
     block
 #    Macro.postwalk block, fn
 #      {:def, _, _, _} = fn_ast -> inject_mockex_utilities(fn_ast)
