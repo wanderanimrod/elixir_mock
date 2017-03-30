@@ -21,7 +21,6 @@ defmodule MockexTest.Construction do
     assert RealModule.function_one(1) == :real_result_one
   end
 
-  @tag :this
   test "should allow functions on mock to delegate to real module functions when they return :call_through" do
     with_mock(mock) = defmock_of RealModule do
       def function_one(_), do: :call_through
@@ -54,15 +53,14 @@ defmodule MockexTest.Construction do
     assert mock.function_two(1, 2) == RealModule.function_two(1, 2)
   end
 
-#
-#  test "should stub all functions if @keep_undeclared_functions is false" do
-#    with_mock(mock) = defmock_of RealModule do
-#      @keep_undeclared_functions false # the default
-#      def function_one(_), do: :overridden_f1
-#    end
-#    assert mock.function_one(1) == :overridden_f1
-#    assert mock.function_two(1, 2) == nil
-#  end
+  test "should stub all functions if @call_through_undeclared_functions is false" do
+    with_mock(mock) = defmock_of RealModule do
+      @keep_undeclared_functions false # the default
+      def function_one(_), do: :overridden_f1
+    end
+    assert mock.function_one(1) == :overridden_f1
+    assert mock.function_two(1, 2) == nil
+  end
 
   test "should allow definition of mock partially overriding real module functions" do
     with_mock(mock) = defmock_of RealModule do
