@@ -110,6 +110,10 @@ defmodule Mockex do
       def reset do
         :ok = GenServer.call(@watcher_proc, :clear_calls)
       end
+
+      def list_calls,
+        do: GenServer.call(@watcher_proc, :list_calls)
+
     end
   end
 

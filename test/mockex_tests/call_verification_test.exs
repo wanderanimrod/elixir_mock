@@ -53,7 +53,12 @@ defmodule MockexTest.CallVerification do
   end
 
   test "mocks should provide list of all calls on them" do
+    mock = mock_of RealModule
+    mock.function_two(10, 12)
 
+    calls = mock.list_calls()
+
+    assert calls == [{:function_two, [10, 12]}]
   end
 
   # todo assert that watcher process dies with the test process (using spawn? or Task.async & Task.await)
