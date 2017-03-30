@@ -55,7 +55,7 @@ defmodule MockexTest.Construction do
 
   test "should stub all functions if @call_through_undeclared_functions is false" do
     with_mock(mock) = defmock_of RealModule do
-      @keep_undeclared_functions false # the default
+      @call_through_undeclared_functions false # the default
       def function_one(_), do: :overridden_f1
     end
     assert mock.function_one(1) == :overridden_f1
