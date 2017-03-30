@@ -45,6 +45,15 @@ defmodule MockexTest.Construction do
 #    assert mock.function_two(1, 2) == RealModule.function_two(1, 2)
 #  end
 #
+  test "should allow calling through more than one function" do
+    with_mock(mock) = defmock_of RealModule do
+      def function_one(_), do: :call_through
+      def function_two(_, _), do: :call_through
+    end
+    assert mock.function_one(1) == RealModule.function_one(1)
+    assert mock.function_two(1, 2) == RealModule.function_two(1, 2)
+  end
+#
 #  test "should stub all functions if @keep_undeclared_functions is false" do
 #    with_mock(mock) = defmock_of RealModule do
 #      @keep_undeclared_functions false # the default

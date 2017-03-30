@@ -45,7 +45,7 @@ defmodule Mockex do
       defmodule unquote(mock_name) do
         require Mockex
 
-        unquote(mock_ast |> inject_mockex_utilities |> apply_call_throughs(real_module))
+        unquote(mock_ast |> inject_mockex_utilities |> apply_stub_call_throughs(real_module))
 
         unquote(unstubbed_fns_ast(real_module, mock_ast))
 
@@ -196,11 +196,12 @@ defmodule Mockex do
   defp inject_mockex_utilities({:__block__, _, _} = block) do
     Macro.postwalk block, fn
       {:def, _, _, _} = fn_ast -> inject_mockex_utilities(fn_ast)
+      {:def, _, _} = fn_ast    -> inject_mockex_utilities(fn_ast)
       anything_else            -> anything_else
     end
   end
 
-  defp apply_call_throughs({:def, _, [{fn_name, _, args}, _]} = fn_ast, real_module) do
+  defp apply_stub_call_throughs({:def, _, [{fn_name, _, args}, _]} = fn_ast, real_module) do
     clean_args = if is_nil(args) do [] else args end
     call_through_ast = quote do
       unquote(real_module).unquote(fn_name)(unquote_splicing(clean_args))
@@ -211,12 +212,10 @@ defmodule Mockex do
     end
   end
 
-  defp apply_call_throughs({:__block__, _, _} = block, _real_module) do
-    block
-#    Macro.postwalk block, fn
-#      {:def, _, _, _} = fn_ast -> inject_mockex_utilities(fn_ast)
-#      anything_else            -> anything_else
-#    end
+  defp apply_stub_call_throughs({:__block__, _, content_ast}, real_module) do
+    content_ast
+    |> Enum.filter(fn({member_type, _, _}) -> member_type == :def end)
+    |> Enum.map(fn(fn_ast) -> apply_stub_call_throughs(fn_ast, real_module) end)
   end
 
 end
