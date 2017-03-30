@@ -112,7 +112,6 @@ defmodule MockexTest.Construction do
     end
   end
 
-# todo don't allow function definitions that are not on the real module
 # todo add some matchers any(type)
 """
   todo:
