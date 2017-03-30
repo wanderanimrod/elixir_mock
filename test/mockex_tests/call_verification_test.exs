@@ -42,6 +42,20 @@ defmodule MockexTest.CallVerification do
     refute_called mock, function_one(10)
   end
 
+  test "should allow mock calls to be cleared" do
+    mock = mock_of RealModule
+    mock.function_one(10)
+    assert_called mock, function_one(10)
+
+    mock.reset()
+
+    refute_called mock, function_one(10)
+  end
+
+  test "mocks should provide list of all calls on them" do
+
+  end
+
   # todo assert that watcher process dies with the test process (using spawn? or Task.async & Task.await)
   @tag skip: "watcher processes are not dying after parent dies despite being started with start_link"
   test "mock watcher should die with the test process" do

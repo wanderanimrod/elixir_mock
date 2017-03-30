@@ -16,6 +16,10 @@ defmodule MockWatcher do
     {:reply, {call_exists, state.calls}, state}
   end
 
+  def handle_call(:clear_calls, _from, state) do
+    {:reply, :ok, %{state | calls: []}}
+  end
+
   def get_watcher_name_for(mock_name) do
     :"__mockex__watcher_#{mock_name}"
   end

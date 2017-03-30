@@ -101,9 +101,14 @@ defmodule Mockex do
 
   defmacro inject_mockex_utilities do
     quote do
+      @watcher_proc MockWatcher.get_watcher_name_for(__MODULE__)
+
       def __mockex__call_exists(fn_name, args) do
-        watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
-        GenServer.call(watcher_proc, {:call_exists, fn_name, args})
+        GenServer.call(@watcher_proc, {:call_exists, fn_name, args})
+      end
+
+      def reset do
+        :ok = GenServer.call(@watcher_proc, :clear_calls)
       end
     end
   end

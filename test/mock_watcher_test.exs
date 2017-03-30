@@ -35,4 +35,11 @@ defmodule MockWatcherTest do
     :ok = GenServer.call(watcher, {:record_call, :fn_name, [:arg]})
     assert GenServer.call(watcher, {:call_exists, :other_fn, [:arg]}) == {false, [{:fn_name, [:arg]}]}
   end
+
+  test "should clear calls", %{mock: mock, watcher: watcher} do
+    {:ok, _} = MockWatcher.start_link(mock)
+    :ok = GenServer.call(watcher, {:record_call, :fn_name, [:arg]})
+    :ok = GenServer.call(watcher, :clear_calls)
+    assert GenServer.call(watcher, {:call_exists, :fn_name, [:arg]}) == {false, []}
+  end
 end
