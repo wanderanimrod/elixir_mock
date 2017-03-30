@@ -40,7 +40,10 @@ defmodule Mockex do
   defmacro defmock_of(real_module, do: mock_ast) do
     call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
     mock_name = random_module_name()
+    stubs = extract_stubs(mock_ast)
+
     quote do
+      verify_mock_structure(unquote(stubs), unquote(real_module))
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
 
       defmodule unquote(mock_name) do
@@ -48,7 +51,7 @@ defmodule Mockex do
 
         unquote(mock_ast |> inject_mockex_utilities |> apply_stub_call_throughs(real_module))
 
-        unquote(unstubbed_fns_ast(real_module, mock_ast, call_through_unstubbed_fns))
+        unquote(unstubbed_fns_ast(real_module, stubs, call_through_unstubbed_fns))
 
         Mockex.inject_mockex_utilities()
       end
@@ -131,6 +134,14 @@ defmodule Mockex do
     end
   end
 
+  def verify_mock_structure(stubs, real_module) do
+    real_functions = real_module.__info__(:functions)
+    invalid_stubs = Enum.filter stubs, fn stub -> not stub in real_functions end
+    if not Enum.empty?(invalid_stubs) do
+      Mockex.MockDefinitionError.raise_it(invalid_stubs, real_module)
+    end
+  end
+
   defp should_call_through_unstubbed_functions({:__block__, _, contents}) do
     contents
     |> Enum.filter(fn {member_type, _, _} -> member_type == :@ end)
@@ -141,8 +152,7 @@ defmodule Mockex do
 
   defp should_call_through_unstubbed_functions(_non_block_mock), do: false
 
-  defp unstubbed_fns_ast(real_module, mock_ast, call_through) do
-    stubs = extract_stubs(mock_ast)
+  defp unstubbed_fns_ast(real_module, stubs, call_through) do
     quote do
       unstubbed_fns =
         unquote(real_module).__info__(:functions)

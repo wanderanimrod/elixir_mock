@@ -102,10 +102,17 @@ defmodule MockexTest.Construction do
     assert normal_nil_mock.function_two(10, 20) == empty_body_mock.function_two(10, 20)
   end
 
-# todo how does it affect multiple function heads with pattern matching?
-# todo how does it affect functions with guard clauses
+  test "should not allow functions on mock that are not in the real module" do
+    expected_message = "Cannot stub functions [&missing_one/0, &missing_two/1] because they are not defined on MockexTest.Construction.RealModule"
+    assert_raise Mockex.MockDefinitionError, expected_message, fn ->
+      defmock_of RealModule do
+        def missing_one, do: nil
+        def missing_two(_), do: nil
+      end
+    end
+  end
+
 # todo don't allow function definitions that are not on the real module
-# todo allow retention of original function behaviour for unstubbed functions | just call @real_module.fn_name(unquote_splicing(args)? or a postwalk
 # todo add some matchers any(type)
 """
   todo:
