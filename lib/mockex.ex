@@ -18,7 +18,6 @@ defmodule Mockex do
         def unquote(:"#{fn_name}")(unquote_splicing(args)) do
           watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
           GenServer.call(watcher_proc, {:record_call, unquote(fn_name), unquote(args)})
-          nil
           if unquote(call_through) do
             unquote(real_module).unquote(fn_name)(unquote_splicing(args))
           else
