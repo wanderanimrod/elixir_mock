@@ -12,7 +12,7 @@ defmodule MockWatcher do
   end
 
   def handle_call({:call_exists, fn_name, args}, _from, state) do
-    call_exists = {fn_name, args} in state.calls
+    call_exists = Mockex.Matchers.find_call({fn_name, args}, state.calls)
     {:reply, {call_exists, state.calls}, state}
   end
 

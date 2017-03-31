@@ -1,4 +1,4 @@
-defmodule MockWatcherTest do
+defmodule MockWatcherTest.Basic do
   use ExUnit.Case, async: true
 
   setup do
