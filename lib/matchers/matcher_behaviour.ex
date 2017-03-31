@@ -1,9 +1,9 @@
 defmodule Mockex.Matcher do
-  @callback matches?(args :: nonempty_list) :: boolean
+  @callback matches?(matcher_spec :: any, arg_to_match :: any) :: boolean
 
   def is_a_matcher(module) do
     try do
-      function_exported? module, :matches?, 1
+      function_exported? module, :matches?, 2
     rescue
       ArgumentError -> false
     end

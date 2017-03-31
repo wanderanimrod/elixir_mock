@@ -9,23 +9,35 @@ defmodule Mockex.Matchers do
   end
 
   def find_call({expected_fn, expected_args}, calls) do
-    found_call_by_fn_name = calls |> Enum.find(fn {called_fn, _} -> called_fn == expected_fn end)
-    case found_call_by_fn_name do
-      nil -> false
-      {_fn_name, args} -> match_call_args(args, expected_args)
+    calls
+    |> Enum.filter(fn {called_fn, _} -> called_fn == expected_fn end)
+    |> Enum.any?(fn {_fn_name, args} -> match_call_args(expected_args, args) end)
+  end
+
+  defp match_call_args(expected_args, actual_args) when(length(actual_args) != length(expected_args)), do: false
+
+  defp match_call_args(expected_args, actual_args) do
+    Enum.zip(expected_args, actual_args)
+    |> Enum.all?(fn {expected, actual} ->
+      case expected do
+        {potential_matcher, matcher_spec} -> _match_args({potential_matcher, matcher_spec}, actual)
+        potential_specless_matcher -> _match_args(potential_specless_matcher, actual)
+      end
+    end)
+  end
+
+  defp _match_args({potential_matcher, matcher_spec} = literal_expected_tuple, actual) do
+    if Mockex.Matcher.is_a_matcher(potential_matcher)
+      do potential_matcher.matches?(matcher_spec, actual)
+      else literal_expected_tuple == actual
     end
   end
 
-  defp match_call_args(actual_args, expected_args) when(length(actual_args) != length(expected_args)), do: false
-
-  defp match_call_args(actual_args, expected_args) do
-    Enum.zip(expected_args, actual_args)
-    |> Enum.all?(fn {expected, actual} ->
-      if Mockex.Matcher.is_a_matcher(expected)
-        do expected.matches?(actual)
-        else expected == actual
-      end
-    end)
+  defp _match_args(potential_matcher, actual) do
+    if Mockex.Matcher.is_a_matcher(potential_matcher)
+      do potential_matcher.matches?([], actual)
+      else potential_matcher == actual
+    end
   end
 
 
