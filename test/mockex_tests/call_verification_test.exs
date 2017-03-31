@@ -39,13 +39,13 @@ defmodule MockexTest.CallVerification do
     with_mock(mock) = defmock_of RealModule do
       def function_one(_), do: 10
     end
-    refute_called mock, function_one(10)
+    rrefute_called mock.function_one(10)
   end
 
   test "should allow mock calls to be cleared" do
     mock = mock_of RealModule
     mock.function_one(10)
-    assert_called mock, function_one(10)
+    aassert_called mock.function_one(10)
 
     mock.reset()
 
