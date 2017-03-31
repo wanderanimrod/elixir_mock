@@ -103,6 +103,7 @@ defmodule MockexTest.Construction do
   end
 
   test "should not allow functions on mock that are not in the real module" do
+    # todo add "did you mean to stub function_one/1" if similar functions are present.
     expected_message = "Cannot stub functions [&missing_one/0, &missing_two/1] because they are not defined on MockexTest.Construction.RealModule"
     assert_raise Mockex.MockDefinitionError, expected_message, fn ->
       defmock_of RealModule do
@@ -112,5 +113,6 @@ defmodule MockexTest.Construction do
     end
   end
 
-# todo add some matchers any(type)
+  # todo add :debug option to mock definition that pretty prints the mock code.
+  
 end
