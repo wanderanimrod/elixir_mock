@@ -117,16 +117,7 @@ defmodule Mockex do
     end
   end
 
-  defmacro refute_called(mock_module, call) do
-    {fn_name, _, args} = call
-    quote do
-      {called, _existing_calls} = unquote(mock_module).__mockex__call_exists(unquote(fn_name), unquote(args))
-      call_string = build_call_string(unquote(fn_name), unquote(args))
-      refute called, "Did not expect #{call_string} to be called but it was."
-    end
-  end
-
-  defmacro rrefute_called({{:., _, [mock_ast, fn_name]}, _, args}) do
+  defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args}) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
 
@@ -136,17 +127,7 @@ defmodule Mockex do
     end
   end
 
-  defmacro assert_called(mock_module, call) do
-    {fn_name, _, args} = call
-    quote do
-      {called, existing_calls} = unquote(mock_module).__mockex__call_exists(unquote(fn_name), unquote(args))
-      call_string = build_call_string(unquote(fn_name), unquote(args))
-      existing_calls_string = build_calls_string(existing_calls)
-      assert called, "Expected #{call_string} to have been called but it was not found among calls: \n * #{existing_calls_string}"
-    end
-  end
-
-  defmacro aassert_called({{:., _, [mock_ast, fn_name]}, _, args}) do
+  defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args}) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
       {called, existing_calls} = mock_module.__mockex__call_exists(fn_name, args)

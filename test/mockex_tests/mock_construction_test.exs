@@ -113,9 +113,4 @@ defmodule MockexTest.Construction do
   end
 
 # todo add some matchers any(type)
-"""
-  todo:
-  Improve the verification api. Perhaps use Module.eval_quoted in the `called` macro?
-  - The api we want is: `assert_called mock.function_one(:arg)`
-"""
 end

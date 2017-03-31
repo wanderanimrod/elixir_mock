@@ -19,37 +19,37 @@ defmodule MockexTest.CallVerification do
 
     mock.function_one(:arg)
 
-    assert_called mock, function_one(:arg)
+    assert_called mock.function_one(:arg)
   end
 
   test "should verify implicitly stubbed functions too" do
     mock = mock_of RealModule
     mock.function_one(1)
-    assert_called mock, function_one(1)
-    refute_called mock, function_two(1, 2)
+    assert_called mock.function_one(1)
+    refute_called mock.function_two(1, 2)
   end
 
   test "should only successfully verify function call with exact arguments" do
     mock = mock_of RealModule
     mock.function_one(:arg)
-    refute_called mock, function_one(:other_arg)
+    refute_called mock.function_one(:other_arg)
   end
 
   test "should verify that explicitly stubbed function was not called" do
     with_mock(mock) = defmock_of RealModule do
       def function_one(_), do: 10
     end
-    rrefute_called mock.function_one(10)
+    refute_called mock.function_one(10)
   end
 
   test "should allow mock calls to be cleared" do
     mock = mock_of RealModule
     mock.function_one(10)
-    aassert_called mock.function_one(10)
+    assert_called mock.function_one(10)
 
     mock.reset()
 
-    refute_called mock, function_one(10)
+    refute_called mock.function_one(10)
   end
 
   test "mocks should provide list of all calls on them" do
