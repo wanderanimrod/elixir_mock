@@ -1,5 +1,6 @@
 defmodule Mockex.Matchers do
 
+  # todo require tests to explicitly import this module instead of getting matchers with the Mockex main module.
   defmacro __using__(_) do
     quote do
       def any(type) do
@@ -26,11 +27,12 @@ defmodule Mockex.Matchers do
     end)
   end
 
-  defp _match_args({potential_matcher, matcher_spec} = literal_expected_tuple, actual) do
+  defp _match_args({:__mockex__literal, literal_module}, actual), do: literal_module == actual
+
+  defp _match_args({potential_matcher, matcher_spec} = expected_tuple, actual) do
     if Mockex.Matcher.is_a_matcher(potential_matcher)
       do potential_matcher.matches?(matcher_spec, actual)
-      else literal_expected_tuple == actual
-    end
+      else expected_tuple == actual end
   end
 
   defp _match_args(potential_matcher, actual) do
@@ -39,7 +41,6 @@ defmodule Mockex.Matchers do
       else potential_matcher == actual
     end
   end
-
 
   # todo
   @moduledoc """
