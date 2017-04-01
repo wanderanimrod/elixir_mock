@@ -2,7 +2,7 @@ defmodule Mockex.MatchersTest do
   use ExUnit.Case, async: true
 
   require Mockex
-  import Mockex
+#  import Mockex
 
   defmodule RealModule do
     def function_one(_), do: :real_result_one
