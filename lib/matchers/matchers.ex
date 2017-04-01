@@ -4,6 +4,8 @@ defmodule Mockex.Matchers do
 
   def any(type), do: {Mockex.Matchers.Any, type}
 
+  def literal(value), do: {:__mockex__literal, value}
+
   @doc false
   def find_call({expected_fn, expected_args}, calls) do
     calls
