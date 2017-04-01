@@ -1,10 +1,6 @@
 defmodule Mockex.Matchers.Any do
   @behaviour Mockex.Matcher
 
-  def any, do: {__MODULE__, :_}
-
-  def any(type), do: {__MODULE__, type}
-
   @doc false
   def matches?(type, arg) do
     test_fn = case type do

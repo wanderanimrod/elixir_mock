@@ -1,12 +1,21 @@
 defmodule Mockex.MatchersTest do
   use ExUnit.Case, async: true
-
   require Mockex
+
+  alias Mockex.Matchers
 #  import Mockex
 
   defmodule RealModule do
     def function_one(_), do: :real_result_one
     def function_two(_, _), do: :real_result_two
+  end
+
+  test "should provide convenience 'any()' wrapper to match anything" do
+    assert Matchers.any() == {Mockex.Matchers.Any, :_}
+  end
+
+  test "should provide 'any(type)' wrapper to generate matcher statement for type" do
+    assert Matchers.any(:int) == {Mockex.Matchers.Any, :int}
   end
 
 #  test "should test if function was called with int arguments" do

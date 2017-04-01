@@ -1,14 +1,10 @@
 defmodule Mockex.Matchers do
 
-  # todo require tests to explicitly import this module instead of getting matchers with the Mockex main module.
-  defmacro __using__(_) do
-    quote do
-      def any(type) do
-        {Any, [type]}
-      end
-    end
-  end
+  def any, do: {Mockex.Matchers.Any, :_}
 
+  def any(type), do: {Mockex.Matchers.Any, type}
+
+  @doc false
   def find_call({expected_fn, expected_args}, calls) do
     calls
     |> Enum.filter(fn {called_fn, _} -> called_fn == expected_fn end)

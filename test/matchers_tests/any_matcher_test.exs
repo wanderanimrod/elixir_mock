@@ -72,11 +72,4 @@ defmodule Mockex.Matchers.AnyTest do
     end
   end
 
-  test "should provide convenience 'any()' wrapper to match anything" do
-    assert any() == {Mockex.Matchers.Any, :_}
-  end
-
-  test "should provide 'any(type)' wrapper to generate matcher statement for type" do
-    assert any(:int) == {Mockex.Matchers.Any, :int}
-  end
 end
