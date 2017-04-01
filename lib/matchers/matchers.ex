@@ -21,13 +21,12 @@ defmodule Mockex.Matchers do
     Enum.zip(expected_args, actual_args)
     |> Enum.all?(fn {expected, actual} ->
       case expected do
+        {:__mockex__literal, literal_module} -> literal_module == actual
         {potential_matcher, matcher_spec} -> _match_args({potential_matcher, matcher_spec}, actual)
         potential_specless_matcher -> _match_args(potential_specless_matcher, actual)
       end
     end)
   end
-
-  defp _match_args({:__mockex__literal, literal_module}, actual), do: literal_module == actual
 
   defp _match_args({potential_matcher, matcher_spec} = expected_tuple, actual) do
     if Mockex.Matcher.is_a_matcher(potential_matcher)

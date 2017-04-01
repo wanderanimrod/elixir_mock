@@ -68,7 +68,6 @@ defmodule MockWatcherTest.MatcherTest do
     assert was_called_with_simple_tuple
   end
 
-  @tag :this
   test "should find function calls that took literal Matchers as arguments", %{watcher: watcher} do
     :ok = GenServer.call(watcher, {:record_call, :fn_name, [FalseMatcher]})
     {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{:__mockex__literal, FalseMatcher}]})

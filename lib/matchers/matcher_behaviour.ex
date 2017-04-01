@@ -1,5 +1,5 @@
 defmodule Mockex.Matcher do
-  @callback matches?(matcher_spec :: any, arg_to_match :: any) :: boolean
+  @callback matches?(matcher_spec :: nonempty_list, arg_to_match :: any) :: boolean
 
   def is_a_matcher(module) do
     try do
