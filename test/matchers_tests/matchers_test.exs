@@ -21,30 +21,27 @@ defmodule Mockex.MatchersTest do
   end
 
   test "should test function args with custom matcher" do
-    defmodule APersonOver30YearsOld do
-      @behaviour Mockex.Matcher
-      def matches?(_, %{age: age}), do: age > 30
-    end
+    a_person_over_30_years_old = {:matches, fn(%{age: age}) -> age > 30 end}
 
     mock = mock_of RealModule
 
     mock.function_one(%{age: 20})
-    refute_called mock.function_one(APersonOver30YearsOld)
+    refute_called mock.function_one(a_person_over_30_years_old)
 
     mock.function_one(%{age: 40})
-    assert_called mock.function_one(APersonOver30YearsOld)
+    assert_called mock.function_one(a_person_over_30_years_old)
   end
 
   test "should provide convenience 'any()' wrapper to match anything" do
-    assert any() == {Mockex.Matchers.Any, :_}
+    assert any() == {:matches, Mockex.Matchers.InBuilt.any(:_)}
   end
 
   test "should provide 'any(type)' wrapper to generate matcher statement for type" do
-    assert any(:int) == {Mockex.Matchers.Any, :int}
+    assert any(:integer) == {:matches, Mockex.Matchers.InBuilt.any(:integer)}
   end
 
   test "should provide 'literal' wrapper to generate matcher statement for args that are matchers" do
-    assert literal(Mockex.Matchers.Any) == {:__mockex__literal, Mockex.Matchers.Any}
+    assert literal({:matches, 10}) == {:__mockex__literal, {:matches, 10}}
   end
 
 end

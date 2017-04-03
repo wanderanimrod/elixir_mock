@@ -1,12 +1,5 @@
-defmodule MockWatcherTest.MatcherTest do
+defmodule MockWatcherTest.FindingCallsWithMatchers do
   use ExUnit.Case, async: true
-
-  defmodule EmptyModule do end # here so we don't get redefinition compiler warnings
-
-  defmodule FalseMatcher do
-    @behaviour Mockex.Matcher
-    def matches?(_, _), do: false
-  end
 
   setup do
     mock_name = :"#{UUID.uuid4(:hex)}"
@@ -16,61 +9,44 @@ defmodule MockWatcherTest.MatcherTest do
     {:ok, %{watcher: watcher_name}}
   end
 
-  test "should find calls with args for which matcher returns true for corresponding arg", %{watcher: watcher} do
-    defmodule Anything do
-      @behaviour Mockex.Matcher
-      def matches?(_, _), do: true
-    end
+  test "should find calls with args for which matcher for corresponding arg returns true", %{watcher: watcher} do
+    anything = {:matches, fn _ -> true end}
 
     :ok = GenServer.call(watcher, {:record_call, :fn_name, [1, 2]})
-    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [Anything, 2]})
+    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [anything, 2]})
 
     assert was_called
   end
 
-  test "should fail to find calls with args for which matcher returns false", %{watcher: watcher} do
+  test "should fail to find calls with args for which matcher function returns false", %{watcher: watcher} do
+    nothing = {:matches, fn _ -> false end}
+
     :ok = GenServer.call(watcher, {:record_call, :fn_name, [1, 2]})
-    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [FalseMatcher, 2]})
+    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [nothing, 2]})
+
     refute was_called
   end
 
+  test "should allow for special {:matches, matcher} tuple to be matched literally", %{watcher: watcher} do
+    literal_argument = {:matches, 10}
+    :ok = GenServer.call(watcher, {:record_call, :fn_name, [literal_argument]})
+    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{:__mockex__literal, literal_argument}]})
+    assert was_called
+  end
+
+  @tag :this
   test "should work with matcher that takes arguments in its spec", %{watcher: watcher} do
-    defmodule Any do
-      @behaviour Mockex.Matcher
-      def matches?(type, arg) do
-        case type do
-          :int -> is_integer(arg)
-          :boolean -> is_boolean(arg)
-        end
+    any = fn(type) ->
+      case type do
+        :integer -> &is_integer/1
+        :boolean -> &is_boolean/1
       end
     end
 
     :ok = GenServer.call(watcher, {:record_call, :fn_name, [1, false]})
-    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{Any, :int}, {Any, :boolean}]})
+    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{:matches, any.(:integer)}, {:matches, any.(:boolean)}]})
 
     assert was_called
   end
 
-  test "should match literal module args", %{watcher: watcher} do
-    :ok = GenServer.call(watcher, {:record_call, :fn_name, [EmptyModule]})
-    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [EmptyModule]})
-    assert was_called
-  end
-
-  test "should match literal tuples", %{watcher: watcher} do
-    :ok = GenServer.call(watcher, {:record_call, :fn_name, [{EmptyModule, 10}]})
-    :ok = GenServer.call(watcher, {:record_call, :fn_name, [{:simple, :tuple}]})
-
-    {was_called_with_module_tuple, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{EmptyModule, 10}]})
-    {was_called_with_simple_tuple, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{:simple, :tuple}]})
-
-    assert was_called_with_module_tuple
-    assert was_called_with_simple_tuple
-  end
-
-  test "should find function calls that took literal Matchers as arguments", %{watcher: watcher} do
-    :ok = GenServer.call(watcher, {:record_call, :fn_name, [FalseMatcher]})
-    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{:__mockex__literal, FalseMatcher}]})
-    assert was_called
-  end
 end

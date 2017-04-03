@@ -1,8 +1,8 @@
 defmodule Mockex.Matchers do
 
-  def any, do: {Mockex.Matchers.Any, :_}
+  def any, do: {:matches, Mockex.Matchers.InBuilt.any(:_)}
 
-  def any(type), do: {Mockex.Matchers.Any, type}
+  def any(type), do: {:matches, Mockex.Matchers.InBuilt.any(type)}
 
   def literal(value), do: {:__mockex__literal, value}
 
@@ -19,23 +19,18 @@ defmodule Mockex.Matchers do
     Enum.zip(expected_args, actual_args)
     |> Enum.all?(fn {expected, actual} ->
       case expected do
-        {:__mockex__literal, literal_module} -> literal_module == actual
-        {potential_matcher, matcher_spec} -> _match_args({potential_matcher, matcher_spec}, actual)
-        potential_specless_matcher -> _match_args(potential_specless_matcher, actual)
+        {:__mockex__literal, literal} -> literal == actual
+        {:matches, matcher} -> _match_args(matcher, actual)
+        implicit_literal -> implicit_literal == actual
       end
     end)
   end
 
-  defp _match_args({potential_matcher, matcher_spec} = expected_tuple, actual) do
-    if Mockex.Matcher.is_a_matcher(potential_matcher)
-      do potential_matcher.matches?(matcher_spec, actual)
-      else expected_tuple == actual end
+  defp _match_args(matcher, actual) when is_function(matcher) do
+    matcher.(actual)
   end
 
-  defp _match_args(potential_matcher, actual) do
-    if Mockex.Matcher.is_a_matcher(potential_matcher)
-      do potential_matcher.matches?([], actual)
-      else potential_matcher == actual
-    end
+  defp _match_args(_, _non_function_matcher) do
+    # todo tell user to use literal helper.
   end
 end

@@ -1,9 +1,6 @@
-defmodule Mockex.Matchers.Any do
-  @behaviour Mockex.Matcher
-
-  @doc false
-  def matches?(type, arg) do
-    test_fn = case type do
+defmodule Mockex.Matchers.InBuilt do
+  def any(type) do
+    case type do
       :_ -> fn _thing -> true end
       :atom -> &is_atom/1
       :binary -> &is_bitstring/1
@@ -18,7 +15,5 @@ defmodule Mockex.Matchers.Any do
       :tuple -> &is_tuple/1
       unknown_type -> raise ArgumentError, message: "Type #{inspect unknown_type} is not supported by this matcher"
     end
-    test_fn.(arg)
   end
-
 end
