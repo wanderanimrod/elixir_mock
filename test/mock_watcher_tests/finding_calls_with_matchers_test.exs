@@ -34,7 +34,6 @@ defmodule MockWatcherTest.FindingCallsWithMatchers do
     assert was_called
   end
 
-  @tag :this
   test "should work with matcher that takes arguments in its spec", %{watcher: watcher} do
     any = fn(type) ->
       case type do
@@ -44,9 +43,9 @@ defmodule MockWatcherTest.FindingCallsWithMatchers do
     end
 
     :ok = GenServer.call(watcher, {:record_call, :fn_name, [1, false]})
-    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{:matches, any.(:integer)}, {:matches, any.(:boolean)}]})
+    expected_args = [{:matches, any.(:integer)}, {:matches, any.(:boolean)}]
+    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, expected_args})
 
     assert was_called
   end
-
 end

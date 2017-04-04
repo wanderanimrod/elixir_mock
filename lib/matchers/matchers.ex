@@ -19,7 +19,7 @@ defmodule Mockex.Matchers do
     Enum.zip(expected_args, actual_args)
     |> Enum.all?(fn {expected, actual} ->
       case expected do
-        {:__mockex__literal, literal} -> literal == actual
+        {:__mockex__literal, explicit_literal} -> explicit_literal == actual
         {:matches, matcher} -> _match_args(matcher, actual)
         implicit_literal -> implicit_literal == actual
       end
@@ -27,10 +27,19 @@ defmodule Mockex.Matchers do
   end
 
   defp _match_args(matcher, actual) when is_function(matcher) do
+    matcher_arity = :erlang.fun_info(matcher)[:arity]
+    error_message = "Use of bad function matcher '#{inspect matcher}' in match expression.
+    Argument matchers must be functions with arity 1. This function has arity #{matcher_arity}"
+    if  matcher_arity != 1 do
+      raise ArgumentError, message: error_message
+    end
     matcher.(actual)
   end
 
-  defp _match_args(_, _non_function_matcher) do
-    # todo tell user to use literal helper.
+  defp _match_args(_, non_function_matcher) do
+    error_message = "Use of non-function matcher '#{inspect non_function_matcher}' in match expression.
+    Argument matchers must be in the form {:matches, &matcher_function/1}. If you expected your stubbed function to have
+    been called with literal {:matches, #{inspect non_function_matcher}}, use Mockex.Matchers.literal({:matches, #{inspect non_function_matcher}})"
+    raise ArgumentError, message: error_message
   end
 end
