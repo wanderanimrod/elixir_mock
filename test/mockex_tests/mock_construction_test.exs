@@ -113,7 +113,6 @@ defmodule MockexTest.Construction do
     end
   end
 
-  @tag :this
   test "should allow private functions in mock definitions" do
     with_mock(mock) = defmock_of RealModule do
       def function_one(_) do
