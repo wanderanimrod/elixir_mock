@@ -113,6 +113,19 @@ defmodule MockexTest.Construction do
     end
   end
 
+  @tag :this
+  test "should allow private functions in mock definitions" do
+    with_mock(mock) = defmock_of RealModule do
+      def function_one(_) do
+        private_function()
+      end
+
+      defp private_function, do: :response_from_private_function
+    end
+
+    assert mock.function_one(:blah) == :response_from_private_function
+  end
+
   # todo add :debug option to mock definition that pretty prints the mock code.
   
 end

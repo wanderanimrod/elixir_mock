@@ -39,10 +39,11 @@ defmodule Mockex do
   defmacro defmock_of(real_module, do: mock_ast) do
     call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
     mock_name = random_module_name()
-    stubs = extract_stubs(mock_ast)
+    mock_fns = extract_mock_fns(mock_ast)
+    stubs = Enum.map mock_fns, fn {_fn_type, {name, arity}} -> {name, arity} end
 
     quote do
-      verify_mock_structure(unquote(stubs), unquote(real_module))
+      verify_mock_structure(unquote(mock_fns), unquote(real_module))
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
 
       defmodule unquote(mock_name) do
@@ -147,9 +148,14 @@ defmodule Mockex do
     end
   end
 
-  def verify_mock_structure(stubs, real_module) do
+  def verify_mock_structure(mock_fns, real_module) do
     real_functions = real_module.__info__(:functions)
-    invalid_stubs = Enum.filter stubs, fn stub -> not stub in real_functions end
+    invalid_stubs =
+      mock_fns
+      |> Enum.filter(fn {fn_type, _} -> fn_type == :def end)
+      |> Enum.filter(fn {:def, stub} -> not stub in real_functions end)
+      |> Enum.map(fn {:def, stub} -> stub end)
+
     if not Enum.empty?(invalid_stubs) do
       Mockex.MockDefinitionError.raise_it(invalid_stubs, real_module)
     end
@@ -180,23 +186,25 @@ defmodule Mockex do
 
   defp random_arg_name, do: :"mockex_unignored__#{UUID.uuid4(:hex)}"
 
-  defp build_fn_spec(fn_name, args) do
+  defp build_fn_spec(fn_type, fn_name, args) do
     arity = case args do
       nil -> 0
       list -> length(list)
     end
-    {fn_name, arity}
+    {fn_type, {fn_name, arity}}
   end
 
-  defp extract_stubs({:def, _, [{fn_name, _, args}, _]}) do
-    [build_fn_spec(fn_name, args)]
-  end
+  defp extract_mock_fns({:def, _, [{fn_name, _, args}, _]}),
+    do: [build_fn_spec(:def, fn_name, args)]
 
-  defp extract_stubs({:__block__, _, content_ast}) do
+  defp extract_mock_fns({:defp, _, [{fn_name, _, args}, _]}),
+    do: [build_fn_spec(:defp, fn_name, args)]
+
+  defp extract_mock_fns({:__block__, _, content_ast}) do
     content_ast
-    |> Enum.filter(fn({member_type, _, _}) -> member_type == :def end)
-    |> Enum.map(fn({:def, _, [{fn_name, _, args}, _]}) ->
-      build_fn_spec(fn_name, args)
+    |> Enum.filter(fn({member_type, _, _}) -> member_type in [:def, :defp] end)
+    |> Enum.map(fn({fn_type, _, [{fn_name, _, args}, _]}) ->
+      build_fn_spec(fn_type, fn_name, args)
     end)
   end
 
@@ -245,9 +253,11 @@ defmodule Mockex do
     end
   end
 
+  defp apply_stub_call_throughs({:defp, _, _} = private_mock_fn_ast, _real_module), do: private_mock_fn_ast
+
   defp apply_stub_call_throughs({:__block__, _, content_ast}, real_module) do
     content_ast
-    |> Enum.filter(fn({member_type, _, _}) -> member_type == :def end)
+    |> Enum.filter(fn({member_type, _, _}) -> member_type in [:def, :defp] end)
     |> Enum.map(fn(fn_ast) -> apply_stub_call_throughs(fn_ast, real_module) end)
   end
 
