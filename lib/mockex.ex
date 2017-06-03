@@ -36,25 +36,25 @@ defmodule Mockex do
     end
   end
 
-  defmacro defmock_of(real_module, do: mock_ast) do
+  defmacro defmock_of(real_module, context \\ {:%{}, [], []}, do: mock_ast) do
     call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
     mock_name = random_module_name()
     mock_fns = extract_mock_fns(mock_ast)
     stubs = Enum.map mock_fns, fn {_fn_type, {name, arity}} -> {name, arity} end
 
     quote do
-      verify_mock_structure(unquote(mock_fns), unquote(real_module))
-      {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
+     verify_mock_structure(unquote(mock_fns), unquote(real_module))
+     {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
 
-      defmodule unquote(mock_name) do
-        require Mockex
+     defmodule unquote(mock_name) do
+       require Mockex
 
-        unquote(mock_ast |> inject_mockex_utilities |> apply_stub_call_throughs(real_module))
+       unquote(mock_ast |> inject_mockex_function_utilities |> apply_stub_call_throughs(real_module))
 
-        unquote(unstubbed_fns_ast(real_module, stubs, call_through_unstubbed_fns))
+       unquote(unstubbed_fns_ast(real_module, stubs, call_through_unstubbed_fns))
 
-        Mockex.inject_mockex_utilities()
-      end
+       Mockex.inject_mockex_utilities(unquote(context))
+     end
     end
   end
 
@@ -71,7 +71,7 @@ defmodule Mockex do
 
         Mockex.inject_monitored_real_functions(unquote(real_module), real_functions)
 
-        Mockex.inject_mockex_utilities()
+        Mockex.inject_mockex_utilities(%{})
       end
     end
   end
@@ -100,9 +100,10 @@ defmodule Mockex do
     |> Enum.join("\n * ")
   end
 
-  defmacro inject_mockex_utilities do
+  defmacro inject_mockex_utilities(context) do
     quote do
       @watcher_proc MockWatcher.get_watcher_name_for(__MODULE__)
+      @mockex_context unquote(context)
 
       def __mockex__call_exists(fn_name, args) do
         GenServer.call(@watcher_proc, {:call_exists, fn_name, args})
@@ -115,6 +116,10 @@ defmodule Mockex do
       def list_calls,
         do: GenServer.call(@watcher_proc, :list_calls)
 
+      def mockex_context(key) when is_atom(key) do
+        value = Map.get(@mockex_context, key)
+        if value, do: value, else: (raise ArgumentError, "#{inspect key} not found in mock context #{inspect @mockex_context}")
+      end
     end
   end
 
@@ -225,7 +230,7 @@ defmodule Mockex do
     [do: {:__block__, [], storage_call_lines ++ lines}]
   end
 
-  defp inject_mockex_utilities({:def, _, [{fn_name, _, args}, _]} = fn_ast) do
+  defp inject_mockex_function_utilities({:def, _, [{fn_name, _, args}, _]} = fn_ast) do
     clean_args = cleanup_ignored_args(args)
     Macro.postwalk(fn_ast, fn
       [do: plain_value]            -> inject_mockex_utility_lines([plain_value], fn_name, clean_args)
@@ -235,9 +240,9 @@ defmodule Mockex do
     end)
   end
 
-  defp inject_mockex_utilities({:__block__, _, _} = block) do
+  defp inject_mockex_function_utilities({:__block__, _, _} = block) do
     Macro.postwalk block, fn
-      {:def, _, _} = fn_ast    -> inject_mockex_utilities(fn_ast)
+      {:def, _, _} = fn_ast    -> inject_mockex_function_utilities(fn_ast)
       anything_else            -> anything_else
     end
   end

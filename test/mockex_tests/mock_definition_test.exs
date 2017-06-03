@@ -125,6 +125,14 @@ defmodule MockexTest.Definition do
     assert mock.function_one(:blah) == :response_from_private_function
   end
 
+  test "should allow tests to inject context into mocks" do
+    my_var = 10
+    with_mock(mock) = defmock_of RealModule, %{injected_var: my_var} do
+      def function_one(_), do: mockex_context(:injected_var)
+    end
+    assert mock.function_one(:blah) == my_var
+  end
+
   # todo add :debug option to mock definition that pretty prints the mock code.
   
 end
