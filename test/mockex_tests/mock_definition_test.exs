@@ -1,4 +1,4 @@
-defmodule MockexTest.Construction do
+defmodule MockexTest.Definition do
   use ExUnit.Case, async: true
 
   require Mockex
@@ -104,7 +104,7 @@ defmodule MockexTest.Construction do
 
   test "should not allow functions on mock that are not in the real module" do
     # todo add "did you mean to stub function_one/1" if similar functions are present.
-    expected_message = "Cannot stub functions [&missing_one/0, &missing_two/1] because they are not defined on MockexTest.Construction.RealModule"
+    expected_message = "Cannot stub functions [&missing_one/0, &missing_two/1] because they are not defined on MockexTest.Definition.RealModule"
     assert_raise Mockex.MockDefinitionError, expected_message, fn ->
       defmock_of RealModule do
         def missing_one, do: nil
