@@ -1,6 +1,7 @@
-# ElixirMock [DO NOT USE YET]
+# ElixirMock (alpha)
 
-Sanitary mock modules for elixir, configurable per test and inspectable
+Creates mock modules based on real elixir modules for testing. The mocks are inspectable and they don't replace
+the original modules the are based on.
 
 ## Installation
 
