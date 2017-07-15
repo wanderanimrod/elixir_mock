@@ -1,9 +1,9 @@
-defmodule Mockex.MatchersTest do
+defmodule ElixirMock.MatchersTest do
   use ExUnit.Case, async: true
-  require Mockex
+  require ElixirMock
 
-  import Mockex.Matchers
-  import Mockex
+  import ElixirMock.Matchers
+  import ElixirMock
 
   defmodule RealModule do
     def function_one(_), do: :real_result_one
@@ -33,15 +33,15 @@ defmodule Mockex.MatchersTest do
   end
 
   test "should provide convenience 'any()' wrapper to match anything" do
-    assert any() == {:matches, Mockex.Matchers.InBuilt.any(:_)}
+    assert any() == {:matches, ElixirMock.Matchers.InBuilt.any(:_)}
   end
 
   test "should provide 'any(type)' wrapper to generate matcher statement for type" do
-    assert any(:integer) == {:matches, Mockex.Matchers.InBuilt.any(:integer)}
+    assert any(:integer) == {:matches, ElixirMock.Matchers.InBuilt.any(:integer)}
   end
 
   test "should provide 'literal' wrapper to generate matcher statement for args that are matchers" do
-    assert literal({:matches, 10}) == {:__mockex__literal, {:matches, 10}}
+    assert literal({:matches, 10}) == {:__elixir_mock__literal, {:matches, 10}}
   end
 
 end

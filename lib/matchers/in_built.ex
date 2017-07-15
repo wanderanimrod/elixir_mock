@@ -1,4 +1,4 @@
-defmodule Mockex.Matchers.InBuilt do
+defmodule ElixirMock.Matchers.InBuilt do
   def any(type) do
     case type do
       :_ -> fn _thing -> true end

@@ -30,7 +30,7 @@ defmodule MockWatcherTest.FindingCallsWithMatchers do
   test "should allow for special {:matches, matcher} tuple to be matched literally", %{watcher: watcher} do
     literal_argument = {:matches, 10}
     :ok = GenServer.call(watcher, {:record_call, :fn_name, [literal_argument]})
-    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{:__mockex__literal, literal_argument}]})
+    {was_called, _calls} = GenServer.call(watcher, {:call_exists, :fn_name, [{:__elixir_mock__literal, literal_argument}]})
     assert was_called
   end
 

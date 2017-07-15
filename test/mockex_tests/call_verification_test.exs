@@ -1,9 +1,9 @@
-defmodule MockexTest.CallVerification do
+defmodule ElixirMockTest.CallVerification do
   use ExUnit.Case, async: true
 
   require Logger
-  require Mockex
-  import Mockex
+  require ElixirMock
+  import ElixirMock
 
   defmodule RealModule do
     def function_one(_arg), do: :real_result_one

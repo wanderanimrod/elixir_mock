@@ -1,8 +1,8 @@
-defmodule MockexTest.Messaging do
+defmodule ElixirMockTest.Messaging do
   use ExUnit.Case, async: true
 
-  require Mockex
-  import Mockex
+  require ElixirMock
+  import ElixirMock
 
   defmodule RealModule do
     def function_one(_arg), do: :real_result_one

@@ -9,7 +9,7 @@ defmodule MockWatcherTest.Basic do
 
   test "should start process with given mock name", %{mock: mock} do
     {:ok, _} = MockWatcher.start_link(mock)
-    assert is_pid(Process.whereis(:"__mockex__watcher_#{mock}"))
+    assert is_pid(Process.whereis(:"__elixir_mock__watcher_#{mock}"))
   end
 
   test "should verify that call does not exist when there are no calls on watcher", %{mock: mock, watcher: watcher} do

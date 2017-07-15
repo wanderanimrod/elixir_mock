@@ -1,8 +1,8 @@
-defmodule Mockex.Mixfile do
+defmodule ElixirMock.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :mockex,
+    [app: :elixir_mock,
      version: "0.2.2",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,

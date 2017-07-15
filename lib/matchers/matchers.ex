@@ -1,10 +1,10 @@
-defmodule Mockex.Matchers do
+defmodule ElixirMock.Matchers do
 
-  def any, do: {:matches, Mockex.Matchers.InBuilt.any(:_)}
+  def any, do: {:matches, ElixirMock.Matchers.InBuilt.any(:_)}
 
-  def any(type), do: {:matches, Mockex.Matchers.InBuilt.any(type)}
+  def any(type), do: {:matches, ElixirMock.Matchers.InBuilt.any(type)}
 
-  def literal(value), do: {:__mockex__literal, value}
+  def literal(value), do: {:__elixir_mock__literal, value}
 
   @doc false
   def find_call({expected_fn, expected_args}, calls) do
@@ -19,7 +19,7 @@ defmodule Mockex.Matchers do
     Enum.zip(expected_args, actual_args)
     |> Enum.all?(fn {expected, actual} ->
       case expected do
-        {:__mockex__literal, explicit_literal} -> explicit_literal == actual
+        {:__elixir_mock__literal, explicit_literal} -> explicit_literal == actual
         {:matches, matcher} -> _match_args(matcher, actual)
         implicit_literal -> implicit_literal == actual
       end
@@ -39,7 +39,7 @@ defmodule Mockex.Matchers do
   defp _match_args(_, non_function_matcher) do
     error_message = "Use of non-function matcher '#{inspect non_function_matcher}' in match expression.
     Argument matchers must be in the form {:matches, &matcher_function/1}. If you expected your stubbed function to have
-    been called with literal {:matches, #{inspect non_function_matcher}}, use Mockex.Matchers.literal({:matches, #{inspect non_function_matcher}})"
+    been called with literal {:matches, #{inspect non_function_matcher}}, use ElixirMock.Matchers.literal({:matches, #{inspect non_function_matcher}})"
     raise ArgumentError, message: error_message
   end
 end

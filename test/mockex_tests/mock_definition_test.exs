@@ -1,8 +1,8 @@
-defmodule MockexTest.Definition do
+defmodule ElixirMockTest.Definition do
   use ExUnit.Case, async: true
 
-  require Mockex
-  import Mockex
+  require ElixirMock
+  import ElixirMock
 
   defmodule RealModule do
     def function_one(_arg), do: :real_result_one
@@ -104,8 +104,8 @@ defmodule MockexTest.Definition do
 
   test "should not allow functions on mock that are not in the real module" do
     # todo add "did you mean to stub function_one/1" if similar functions are present.
-    expected_message = "Cannot stub functions [&missing_one/0, &missing_two/1] because they are not defined on MockexTest.Definition.RealModule"
-    assert_raise Mockex.MockDefinitionError, expected_message, fn ->
+    expected_message = "Cannot stub functions [&missing_one/0, &missing_two/1] because they are not defined on ElixirMockTest.Definition.RealModule"
+    assert_raise ElixirMock.MockDefinitionError, expected_message, fn ->
       defmock_of RealModule do
         def missing_one, do: nil
         def missing_two(_), do: nil
@@ -128,7 +128,7 @@ defmodule MockexTest.Definition do
   test "should allow tests to inject context into mocks" do
     my_var = 10
     with_mock(mock) = defmock_of RealModule, %{injected_var: my_var} do
-      def function_one(_), do: mockex_context(:injected_var)
+      def function_one(_), do: mock_context(:injected_var)
     end
     assert mock.function_one(:blah) == my_var
   end

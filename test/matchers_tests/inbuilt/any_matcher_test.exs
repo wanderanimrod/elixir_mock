@@ -1,6 +1,6 @@
-defmodule Mockex.Matchers.AnyTest do
+defmodule ElixirMock.Matchers.AnyTest do
   use ExUnit.Case, async: true
-  import Mockex.Matchers.InBuilt
+  import ElixirMock.Matchers.InBuilt
 
   test "should test if arg is an integer" do
     assert any(:integer).(10)

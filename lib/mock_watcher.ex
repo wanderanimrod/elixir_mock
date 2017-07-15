@@ -12,7 +12,7 @@ defmodule MockWatcher do
   end
 
   def handle_call({:call_exists, fn_name, args}, _from, state) do
-    call_exists = Mockex.Matchers.find_call({fn_name, args}, state.calls)
+    call_exists = ElixirMock.Matchers.find_call({fn_name, args}, state.calls)
     {:reply, {call_exists, state.calls}, state}
   end
 
@@ -25,6 +25,6 @@ defmodule MockWatcher do
   end
 
   def get_watcher_name_for(mock_name) do
-    :"__mockex__watcher_#{mock_name}"
+    :"__elixir_mock__watcher_#{mock_name}"
   end
 end

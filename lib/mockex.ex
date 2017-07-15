@@ -1,6 +1,6 @@
-defmodule Mockex do
+defmodule ElixirMock do
   @moduledoc """
-  Documentation for Mockex.
+  Documentation for ElixirMock.
   # TODO: We have too many public macros that are supposed to be private.
   Move ast creation to functions as much as possible
   """
@@ -32,7 +32,7 @@ defmodule Mockex do
   defmacro defmock_of(real_module, do: nil) do
     mock_name = random_module_name()
     quote do
-      Mockex.create_mock(unquote(real_module), unquote(mock_name))
+      ElixirMock.create_mock(unquote(real_module), unquote(mock_name))
     end
   end
 
@@ -47,13 +47,13 @@ defmodule Mockex do
      {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
 
      defmodule unquote(mock_name) do
-       require Mockex
+       require ElixirMock
 
-       unquote(mock_ast |> inject_mockex_function_utilities |> apply_stub_call_throughs(real_module))
+       unquote(mock_ast |> inject_elixir_mock_function_utilities |> apply_stub_call_throughs(real_module))
 
        unquote(unstubbed_fns_ast(real_module, stubs, call_through_unstubbed_fns))
 
-       Mockex.inject_mockex_utilities(unquote(context))
+       ElixirMock.inject_elixir_mock_utilities(unquote(context))
      end
     end
   end
@@ -63,15 +63,15 @@ defmodule Mockex do
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_module_name))
 
       defmodule unquote(mock_module_name) do
-        require Mockex
+        require ElixirMock
 
         real_functions =
           unquote(real_module).__info__(:functions)
           |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through)} end)
 
-        Mockex.inject_monitored_real_functions(unquote(real_module), real_functions)
+        ElixirMock.inject_monitored_real_functions(unquote(real_module), real_functions)
 
-        Mockex.inject_mockex_utilities(%{})
+        ElixirMock.inject_elixir_mock_utilities(%{})
       end
     end
   end
@@ -100,12 +100,12 @@ defmodule Mockex do
     |> Enum.join("\n * ")
   end
 
-  defmacro inject_mockex_utilities(context) do
+  defmacro inject_elixir_mock_utilities(context) do
     quote do
       @watcher_proc MockWatcher.get_watcher_name_for(__MODULE__)
-      @mockex_context unquote(context)
+      @mock_context unquote(context)
 
-      def __mockex__call_exists(fn_name, args) do
+      def __elixir_mock__call_exists(fn_name, args) do
         GenServer.call(@watcher_proc, {:call_exists, fn_name, args})
       end
 
@@ -116,9 +116,9 @@ defmodule Mockex do
       def list_calls,
         do: GenServer.call(@watcher_proc, :list_calls)
 
-      def mockex_context(key) when is_atom(key) do
-        value = Map.get(@mockex_context, key)
-        if value, do: value, else: (raise ArgumentError, "#{inspect key} not found in mock context #{inspect @mockex_context}")
+      def mock_context(key) when is_atom(key) do
+        value = Map.get(@mock_context, key)
+        if value, do: value, else: (raise ArgumentError, "#{inspect key} not found in mock context #{inspect @mock_context}")
       end
     end
   end
@@ -127,7 +127,7 @@ defmodule Mockex do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
 
-      {called, _existing_calls} = mock_module.__mockex__call_exists(fn_name, args)
+      {called, _existing_calls} = mock_module.__elixir_mock__call_exists(fn_name, args)
       call_string = build_call_string(fn_name, args)
       refute called, "Did not expect #{call_string} to be called but it was."
     end
@@ -136,7 +136,7 @@ defmodule Mockex do
   defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args}) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
-      {called, existing_calls} = mock_module.__mockex__call_exists(fn_name, args)
+      {called, existing_calls} = mock_module.__elixir_mock__call_exists(fn_name, args)
 
       call_string = build_call_string(fn_name, args)
       existing_calls_string = build_calls_string(existing_calls)
@@ -162,7 +162,7 @@ defmodule Mockex do
       |> Enum.map(fn {:def, stub} -> stub end)
 
     if not Enum.empty?(invalid_stubs) do
-      Mockex.MockDefinitionError.raise_it(invalid_stubs, real_module)
+      ElixirMock.MockDefinitionError.raise_it(invalid_stubs, real_module)
     end
   end
 
@@ -183,13 +183,13 @@ defmodule Mockex do
         |> Enum.filter(fn {fn_name, arity} -> not {fn_name, arity} in unquote(stubs) end)
         |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through)} end)
 
-      Mockex.inject_monitored_real_functions(unquote(real_module), unstubbed_fns)
+      ElixirMock.inject_monitored_real_functions(unquote(real_module), unstubbed_fns)
     end
   end
 
   defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
 
-  defp random_arg_name, do: :"mockex_unignored__#{UUID.uuid4(:hex)}"
+  defp random_arg_name, do: :"elixir_mock_unignored__#{UUID.uuid4(:hex)}"
 
   defp build_fn_spec(fn_type, fn_name, args) do
     arity = case args do
@@ -222,7 +222,7 @@ defmodule Mockex do
     end
   end
 
-  defp inject_mockex_utility_lines(lines, fn_name, args) when is_list(lines) do
+  defp inject_elixir_mock_utility_lines(lines, fn_name, args) when is_list(lines) do
     {:__block__, [], storage_call_lines} = quote do
       watcher_proc = MockWatcher.get_watcher_name_for(__MODULE__)
       GenServer.call(watcher_proc, {:record_call, unquote(fn_name), unquote(args)})
@@ -230,19 +230,19 @@ defmodule Mockex do
     [do: {:__block__, [], storage_call_lines ++ lines}]
   end
 
-  defp inject_mockex_function_utilities({:def, _, [{fn_name, _, args}, _]} = fn_ast) do
+  defp inject_elixir_mock_function_utilities({:def, _, [{fn_name, _, args}, _]} = fn_ast) do
     clean_args = cleanup_ignored_args(args)
     Macro.postwalk(fn_ast, fn
-      [do: plain_value]            -> inject_mockex_utility_lines([plain_value], fn_name, clean_args)
-      [do: {:__block__, _, lines}] -> inject_mockex_utility_lines(lines, fn_name, clean_args)
+      [do: plain_value]            -> inject_elixir_mock_utility_lines([plain_value], fn_name, clean_args)
+      [do: {:__block__, _, lines}] -> inject_elixir_mock_utility_lines(lines, fn_name, clean_args)
       {^fn_name, context, _}       -> {fn_name, context, clean_args}
       anything_else -> anything_else
     end)
   end
 
-  defp inject_mockex_function_utilities({:__block__, _, _} = block) do
+  defp inject_elixir_mock_function_utilities({:__block__, _, _} = block) do
     Macro.postwalk block, fn
-      {:def, _, _} = fn_ast    -> inject_mockex_function_utilities(fn_ast)
+      {:def, _, _} = fn_ast    -> inject_elixir_mock_function_utilities(fn_ast)
       anything_else            -> anything_else
     end
   end
