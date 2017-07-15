@@ -9,6 +9,7 @@ defmodule ElixirMock.Mixfile do
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       description: description(),
+      package: package(),
       deps: deps()
     ]
   end
@@ -18,7 +19,10 @@ defmodule ElixirMock.Mixfile do
   end
 
   defp deps do
-    [{:uuid, "~> 1.1"}]
+    [
+      {:uuid, "~> 1.1"},
+      {:ex_doc, "~> 0.16.2"}
+    ]
   end
 
   defp description do
@@ -29,7 +33,7 @@ defmodule ElixirMock.Mixfile do
     """
   end
 
-  defp package do
+  defp package() do
     [
       name: :elixir_mock,
       licenses: ["MIT"],
