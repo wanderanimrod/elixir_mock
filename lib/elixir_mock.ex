@@ -1,6 +1,42 @@
 defmodule ElixirMock do
   @moduledoc """
+  This module contains functions and macros for creating mocks from real modules. It also contains utilities for
+  verifying that calls were made to functions in the mocks, and inspecting arguments passed when the mocks were called.
 
+  ## Examples
+  ```
+  defmodule MyTest do
+    use ExUnit.Case, async: true # yes, you can run tests that use mocks in parallel
+    require ElixirMock
+    import ElixirMock
+
+    defmodule MyRealModule do
+      def function_one(_arg), do: :real_result
+    end
+
+    test "creates mock from real module without changing real module's behaviour" do
+      my_mock = mock_of MyRealModule # setup
+      assert my_mock.function_one(1) == nil # act
+      assert MyRealModule.function_one(1) == :real_result # assert
+    end
+
+    test "allows me to define custom behaviour for mock functions" do
+      with_mock(my_mock) = defmock_of MyRealModule do
+        def function_one(arg), do: "You called the mock with arg " <> arg
+      end
+      assert my_mock.function_one(100) == "You called the mock with arg 100"
+    end
+
+    test "allows me to verify that a mock function was called with certain arguments" do
+      my_mock = mock_of MyRealModule # setup
+      my_mock.function_one(:param) # act
+      assert_called my_mock.function_one(:param) # assert
+      refute_called my_mock.function_one(:other_param) # assert
+    end
+  end
+  ```
+
+  There's plenty more `ElixirMock` can do. Read the rest of the docs to discover more hidden treasures :)
   """
   # TODO: This module has too many public functions and macros that should really be private
 
