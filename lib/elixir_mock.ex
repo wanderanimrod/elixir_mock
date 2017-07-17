@@ -92,6 +92,10 @@ defmodule ElixirMock do
     end
   end
 
+  @doc """
+  Creates mock from real module with all functions on the mock returning nil. See documentation of
+  `ElixirMock.mock_of/1` for usage examples
+  """
   defmacro defmock_of(real_module, do: nil) do
     mock_name = random_module_name()
     quote do
@@ -99,6 +103,9 @@ defmodule ElixirMock do
     end
   end
 
+  @doc """
+  Creates mock from real module allowing for custom definitons of some or all functions on the mock
+  """
   defmacro defmock_of(real_module, context \\ {:%{}, [], []}, do: mock_ast) do
     call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
     mock_name = random_module_name()
@@ -142,6 +149,39 @@ defmodule ElixirMock do
 
   def mock_of(real_module, call_through \\ false)
 
+  @doc """
+  Creates mock from real module with all functions on real module defined on the the mock. By default, all functions
+  on the mock return nil. The behaviour of the module the mock is defined from remains intact.
+
+  ```
+  defmodule MyRealModule do
+    def function_one(_), do: :real_result
+  end
+
+  require ElixirMock
+  import ElixirMock
+
+  my_mock = mock_of MyRealModule
+
+  # functions on mock return nil
+  my_mock.function_one(1) == nil
+  #=> true
+
+  # the real module is still intact
+  MyRealModule.function_one(1) == :real_result
+  #=> true
+  ```
+
+  ### `call_through`
+  When `:call_through` is provided, functions defined on the mock delegate all calls to the corresponding functions on the
+  real module.
+
+  ```
+  transparent_mock = mock_of MyRealModule, :call_through
+  transparent_mock.function_one(1) == MyRealModule.function_one(1) == :real_result
+  #=> true
+  ```
+  """
   def mock_of(real_module, :call_through),
     do: mock_of(real_module, true)
 
@@ -149,6 +189,36 @@ defmodule ElixirMock do
     mod_name = random_module_name()
     create_mock(real_module, mod_name, call_through)
     mod_name
+  end
+
+  defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args}) do
+    quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
+      {mock_module, _} = Code.eval_quoted(mock_ast)
+
+      {called, _existing_calls} = mock_module.__elixir_mock__call_exists(fn_name, args)
+      call_string = build_call_string(fn_name, args)
+      refute called, "Did not expect #{call_string} to be called but it was."
+    end
+  end
+
+  defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args}) do
+    quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
+      {mock_module, _} = Code.eval_quoted(mock_ast)
+      {called, existing_calls} = mock_module.__elixir_mock__call_exists(fn_name, args)
+
+      call_string = build_call_string(fn_name, args)
+      existing_calls_string = build_calls_string(existing_calls)
+      failure_message = "Expected #{call_string} to have been called but it was not found among calls:
+       * #{existing_calls_string}"
+
+      assert called, failure_message
+    end
+  end
+
+  defmacro with_mock(mock_var_name) do
+    quote do
+      {_, unquote(mock_var_name), _, _}
+    end
   end
 
   @doc false
@@ -188,36 +258,6 @@ defmodule ElixirMock do
         value = Map.get(@mock_context, key)
         if value, do: value, else: (raise ArgumentError, "#{inspect key} not found in mock context #{inspect @mock_context}")
       end
-    end
-  end
-
-  defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args}) do
-    quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
-      {mock_module, _} = Code.eval_quoted(mock_ast)
-
-      {called, _existing_calls} = mock_module.__elixir_mock__call_exists(fn_name, args)
-      call_string = build_call_string(fn_name, args)
-      refute called, "Did not expect #{call_string} to be called but it was."
-    end
-  end
-
-  defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args}) do
-    quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
-      {mock_module, _} = Code.eval_quoted(mock_ast)
-      {called, existing_calls} = mock_module.__elixir_mock__call_exists(fn_name, args)
-
-      call_string = build_call_string(fn_name, args)
-      existing_calls_string = build_calls_string(existing_calls)
-      failure_message = "Expected #{call_string} to have been called but it was not found among calls:
-       * #{existing_calls_string}"
-
-      assert called, failure_message
-    end
-  end
-
-  defmacro with_mock(mock_var_name) do
-    quote do
-      {_, unquote(mock_var_name), _, _}
     end
   end
 
