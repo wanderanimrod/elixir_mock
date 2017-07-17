@@ -1,5 +1,6 @@
 defmodule ElixirMockTest.Definition do
   use ExUnit.Case, async: true
+  doctest ElixirMock
 
   require ElixirMock
   import ElixirMock
