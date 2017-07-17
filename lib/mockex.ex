@@ -1,12 +1,12 @@
 defmodule ElixirMock do
   @moduledoc """
-  Documentation for ElixirMock.
-  # TODO: We have too many public macros that are supposed to be private.
-  Move ast creation to functions as much as possible
+
   """
+  # TODO: This module has too many public functions and macros that should really be private
 
   require Logger
 
+  @doc false
   defmacro inject_monitored_real_functions(real_module, real_functions) do
     quote bind_quoted: [real_module: real_module, real_functions: real_functions] do
       Enum.map real_functions, fn {fn_name, arity, call_through} ->
@@ -58,6 +58,7 @@ defmodule ElixirMock do
     end
   end
 
+  @doc false
   defmacro create_mock(real_module, mock_module_name, call_through \\ false) do
     quote do
       {:ok, _pid} = MockWatcher.start_link(unquote(mock_module_name))
@@ -87,19 +88,23 @@ defmodule ElixirMock do
     mod_name
   end
 
+  @doc false
   def build_call_string(fn_name, args) do
     args_string = args |> Enum.map(&(inspect &1)) |> Enum.join(", ")
     "#{fn_name}(#{args_string})"
   end
 
+  @doc false
   def build_calls_string([]), do: "#{inspect []}"
 
+  @doc false
   def build_calls_string(calls) do
     calls
     |> Enum.map(fn {func, args_list} -> build_call_string(func, args_list) end)
     |> Enum.join("\n * ")
   end
 
+  @doc false
   defmacro inject_elixir_mock_utilities(context) do
     quote do
       @watcher_proc MockWatcher.get_watcher_name_for(__MODULE__)
@@ -153,6 +158,7 @@ defmodule ElixirMock do
     end
   end
 
+  @doc false
   def verify_mock_structure(mock_fns, real_module) do
     real_functions = real_module.__info__(:functions)
     invalid_stubs =
