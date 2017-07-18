@@ -28,8 +28,8 @@ defmodule ElixirMock.Mixfile do
   defp description do
     """
     Creates mock modules based on real elixir modules for testing. The mocks are inspectable, don't replace the original
-    modules the are based on and fully independent of each other. Because of this isolation, mocks defined from the same
-    real module can be used in multiple tests in parallel.
+    modules the are based on and are fully independent of each other. Because of this isolation, mocks defined from the same
+    real module can be used in multiple tests running in parallel.
     """
   end
 

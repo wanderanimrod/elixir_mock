@@ -2,8 +2,8 @@ defmodule ElixirMock do
   @moduledoc """
   This module contains functions and macros for creating mocks from real modules. It also contains utilities for
   verifying that calls were made to functions in the mocks, and inspecting the arguments that were passed to the mocks.
-  The mocks created by this package are meant to be injected as dependencies into the module being tested. They do not
-  replace the module they are constructed from.
+  The mocks created by this package are meant to be injected as dependencies into the module being tested. The mocks do
+  not replace the module they are constructed from.
 
   ## Examples
   The example below demonstrates how you would test that a module in your app, `MyApp.User`, makes a call to the
@@ -46,10 +46,6 @@ defmodule ElixirMock do
 
       # Check that facebook was called with the user id we passed to MyApp.User.load_user/1
       assert_called mock_facebook.get_profile("some-user-id") # passes
-      assert_called mock_facebook.get_profile(Matchers.any) # passes
-      assert_called mock_facebook.get_profile(Matchers.any(:binary)) # passes
-      assert_called mock_facebook.get_profile(Matchers.any(:integer)) # fails!
-      assert user == nil # all cloned from the real module return nil on the mock.
     end
 
     test "we can also define custom behaviour for our mocks using the defmock_of macro" do
@@ -93,8 +89,9 @@ defmodule ElixirMock do
   end
 
   @doc """
-  Creates mock from real module with all functions on the mock returning nil. See documentation of
-  `ElixirMock.mock_of/1` for usage examples
+  Creates mock from real module allowing for custom definitons of some or all functions on the mock
+
+  [todo: complete this]
   """
   defmacro defmock_of(real_module, do: nil) do
     mock_name = random_module_name()
@@ -104,7 +101,10 @@ defmodule ElixirMock do
   end
 
   @doc """
-  Creates mock from real module allowing for custom definitons of some or all functions on the mock
+  Creates mock from real module just like `defmock_of/2` but additionally allows context to be injected into the mock
+  definition.
+
+  [todo: complete this]
   """
   defmacro defmock_of(real_module, context \\ {:%{}, [], []}, do: mock_ast) do
     call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
@@ -150,8 +150,9 @@ defmodule ElixirMock do
   def mock_of(real_module, call_through \\ false)
 
   @doc """
-  Creates mock from real module with all functions on real module defined on the the mock. By default, all functions
-  on the mock return nil. The behaviour of the module the mock is defined from remains intact.
+  Creates mock from real module with all functions on real module defined on the the mock.
+
+  By default, all functions on the mock return nil. The behaviour of the module the mock is defined from remains intact.
 
   ```
   defmodule MyRealModule do
@@ -191,6 +192,15 @@ defmodule ElixirMock do
     mod_name
   end
 
+  @doc """
+  Verifies that a function on a mock was not called.
+
+  When argument matchers are specified in the verification statement, the macro checks all calls to the function and
+  returns true if non of the recorded calls match the arguments specified. See `ElixirMock.Matchers` for documentation
+  on the usage of matchers.
+
+  [todo: complete this]
+  """
   defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args}) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
@@ -201,6 +211,15 @@ defmodule ElixirMock do
     end
   end
 
+  @doc """
+  Verifies that a function on a mock was called.
+
+  When argument matchers are specified in the verification statement, the macro checks all calls to the function and
+  returns true if any of the recorded calls matches the arguments specified. See `ElixirMock.Matchers` for documentation
+  on the usage of matchers.
+
+  [todo: complete this]
+  """
   defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args}) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
@@ -215,6 +234,9 @@ defmodule ElixirMock do
     end
   end
 
+  @doc """
+  A light wrapper that assigns names to mocks created with the `defmock_of/3` and `defmock_of/2` macros.
+  """
   defmacro with_mock(mock_var_name) do
     quote do
       {_, unquote(mock_var_name), _, _}
