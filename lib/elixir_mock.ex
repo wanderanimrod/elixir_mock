@@ -121,7 +121,7 @@ defmodule ElixirMock do
 
   The context injected in the mock is accessible to the functions within the mock definition via the
   inbuilt `mock_context/1` function. The `mock_context/1` function takes in an atom or string and looks up its value in
-  the context map passed to `defmock_of/3`. An `Elixir.ArgumentError` is thrown if the key doesn't exist in the context
+  the context map passed to `defmock_of/3`. An `ArgumentError` is thrown if the key doesn't exist in the context
   map.
 
   Being able to pass context into mocks is very useful when you need to fix the behaviour of a mock using some values
