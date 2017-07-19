@@ -195,11 +195,38 @@ defmodule ElixirMock do
   @doc """
   Verifies that a function on a mock was not called.
 
-  When argument matchers are specified in the verification statement, the macro checks all calls to the function and
-  returns true if non of the recorded calls match the arguments specified. See `ElixirMock.Matchers` for documentation
-  on the usage of matchers.
+  ```
+  defmodule MyTest do
+    use ExUnit.Case
+    require ElixirMock
+    import ElixirMock
 
-  [todo: complete this]
+    test "verifies that function on mock was called" do
+      mock = mock_of List
+      mock.first [1, 2]
+      refute_called mock.first(:some_other_arg) # passes
+      refute_called mock.first([1, 2]) # fails!
+    end
+  end
+  ```
+  When `refute_called/1` is given a matcher, the macro makes the test pass if the matcher evaluates to false for *all*
+  recorded calls. See `ElixirMock.Matchers` for more juicy details on Matchers.
+
+  ```
+  defmodule MyTest do
+    use ExUnit.Case
+    require ElixirMock
+    import ElixirMock
+    alias ElixirMock.Matchers
+
+    test "verifies that function on mock was called" do
+      mock = mock_of List
+      mock.first [1, 2]
+      refute_called mock.first(Matchers.any(:number)) # passes
+      refute_called mock.first(Matchers.any(:list)) # fails!
+    end
+  end
+  ```
   """
   defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args} = _call) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
