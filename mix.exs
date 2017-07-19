@@ -10,7 +10,8 @@ defmodule ElixirMock.Mixfile do
       start_permanent: Mix.env == :prod,
       description: description(),
       package: package(),
-      deps: deps()
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -30,6 +31,7 @@ defmodule ElixirMock.Mixfile do
     Creates mock modules based on real elixir modules for testing. The mocks are inspectable, don't replace the original
     modules the are based on and are fully independent of each other. Because of this isolation, mocks defined from the same
     real module can be used in multiple tests running in parallel.
+    real module can be used in multiple tests running in parallel.
     """
   end
 
@@ -40,6 +42,12 @@ defmodule ElixirMock.Mixfile do
       links: %{"Github" => "https://github.com/wanderanimrod/elixir_mock"},
       source_url: "https://github.com/wanderanimrod/elixir_mock",
       maintainers: ["Wandera Nimrod"]
+    ]
+  end
+
+  defp docs do
+    [
+      extras: ["extra_docs/mock_definition_docs.md"]
     ]
   end
 end
