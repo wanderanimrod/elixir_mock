@@ -89,9 +89,23 @@ defmodule ElixirMock do
   end
 
   @doc """
-  Creates mock from real module allowing for custom definitons of some or all functions on the mock
+  Creates a mock module from a real module allowing custom definitons for some or all of the functions on the mock.
 
-  [todo: complete this]
+  Example:
+
+  ```
+  require ElixirMock
+  import ElixirMock
+
+  with_mock(list_mock) = defmock_of List do
+    def first(_list), do: :mock_implementation
+  end
+
+  list_mock.first([1, 2]) == :mock_implementation
+  #=> true
+  ```
+
+  For more on the options available within mock definitions, see [TODO: this page in docs](doc-link)
   """
   defmacro defmock_of(real_module, do: nil) do
     mock_name = random_module_name()
@@ -101,10 +115,32 @@ defmodule ElixirMock do
   end
 
   @doc """
-  Creates mock from real module just like `defmock_of/2` but additionally allows context to be injected into the mock
-  definition.
+  Creates a mock module from a real module just like `defmock_of/2` but additionally allows a context map to be injected into the
+  mock definition. The context injected in the mock is accessible to the functions within the mock definition via the
+  inbuilt `mock_context/1` function. The `mock_context/1` function takes in an atom or string and looks up its value in
+  the context map passed to `defmock_of/3`. An `Elixir.ArgumentError` is thrown if the key doesn't exist in the context
+  map.
 
-  [todo: complete this]
+  Being able to pass context into mocks is very useful when you need to fix the behaviour of a mock using some values
+  declared outside the mock's definition.
+
+  Example:
+
+  ```
+  require ElixirMock
+  import ElixirMock
+
+  fixed_first = 100
+
+  with_mock(list_mock) = defmock_of List, %{fixed_first: fixed_first} do
+    def first(_list), do: mock_context(:fixed_first)
+  end
+
+  list_mock.first([1, 2]) == fixed_first
+  #=> true
+  ```
+
+  For more on the options available within mock definitions, see [TODO: this page in docs](doc-link)
   """
   defmacro defmock_of(real_module, context \\ {:%{}, [], []}, do: mock_ast) do
     call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
