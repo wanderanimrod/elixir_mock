@@ -201,7 +201,7 @@ defmodule ElixirMock do
 
   [todo: complete this]
   """
-  defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args}) do
+  defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args} = _call) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
 
@@ -214,13 +214,41 @@ defmodule ElixirMock do
   @doc """
   Verifies that a function on a mock was called.
 
-  When argument matchers are specified in the verification statement, the macro checks all calls to the function and
-  returns true if any of the recorded calls matches the arguments specified. See `ElixirMock.Matchers` for documentation
-  on the usage of matchers.
+  ```
+  defmodule MyTest do
+    use ExUnit.Case
+    require ElixirMock
+    import ElixirMock
 
-  [todo: complete this]
+    test "verifies that function on mock was called" do
+      mock = mock_of List
+      mock.first [1, 2]
+      assert_called mock.first([1, 2]) # passes
+      assert_called mock.first(:some_other_arg) # fails!
+    end
+  end
+  ```
+
+  When `assert_called/1` is given a matcher, the macro makes the test pass if the matcher
+  evaluates to true for any recorded call. See `ElixirMock.Matchers` for more juicy details on Matchers.
+
+  ```
+  defmodule MyTest do
+    use ExUnit.Case
+    require ElixirMock
+    import ElixirMock
+    alias ElixirMock.Matchers
+
+    test "verifies that function on mock was called" do
+      mock = mock_of List
+      mock.first [1, 2]
+      assert_called mock.first(Matchers.any(:list)) # passes
+      assert_called mock.first(Matchers.any(:atom)) # fails!
+    end
+  end
+  ```
   """
-  defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args}) do
+  defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args} = _call) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
       {called, existing_calls} = mock_module.__elixir_mock__call_exists(fn_name, args)
