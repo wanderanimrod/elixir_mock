@@ -115,8 +115,10 @@ defmodule ElixirMock do
   end
 
   @doc """
-  Creates a mock module from a real module just like `defmock_of/2` but additionally allows a context map to be injected into the
-  mock definition. The context injected in the mock is accessible to the functions within the mock definition via the
+  Creates a mock module from a real module just like `defmock_of/2` but additionally allows a context map to be injected
+  into the mock definition.
+
+  The context injected in the mock is accessible to the functions within the mock definition via the
   inbuilt `mock_context/1` function. The `mock_context/1` function takes in an atom or string and looks up its value in
   the context map passed to `defmock_of/3`. An `Elixir.ArgumentError` is thrown if the key doesn't exist in the context
   map.
@@ -333,17 +335,14 @@ defmodule ElixirMock do
 
   Example:
   ```
-  defmodule MyTest do
-    use ExUnit.Case
-    require ElixirMock
-    import ElixirMock
+  require ElixirMock
+  import ElixirMock
 
-    test "a test" do
-      with_mock(my_custom_mock) = defmock_of List do end
-      # you can then use 'my_custom_mock' as a normal module
-      my_custom_mock.first([1, 2])
-    end
-  end
+  with_mock(my_custom_mock) = defmock_of List do end
+
+  # you can then use 'my_custom_mock' as a normal module
+  my_custom_mock.first([1, 2])
+  #=> nil
   ```
   """
   defmacro with_mock(mock_var_name) do
