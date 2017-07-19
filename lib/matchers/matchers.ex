@@ -1,4 +1,9 @@
 defmodule ElixirMock.Matchers do
+  @moduledoc """
+  Contains utility functions that allow predicate-based matching against arguments passed to mock function calls.
+
+  Matchers are meant to be used with `ElixirMock.assert_called/1` and `ElixirMock.refute_called/1` macros.
+  """
 
   def any, do: {:matches, ElixirMock.Matchers.InBuilt.any(:_)}
 
