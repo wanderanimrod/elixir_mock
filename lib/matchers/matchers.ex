@@ -2,12 +2,10 @@ defmodule ElixirMock.Matchers do
   @moduledoc """
   Contains utility functions that allow predicate-based matching against arguments passed to mock function calls.
 
-  Matchers are meant to be used with `ElixirMock.assert_called/1` and `ElixirMock.refute_called/1` macros.
-
   The `ElixirMock.assert_called/1` and `ElixirMock.refute_called/1` macros can take matchers in place of literal arguments
   in function call verifications. A matcher is any tuple of the form `{:matches, &matcher_fn/1}` where `matcher_fn` is a
-  function of arity 1 that returns a boolean given an a value. That value is a argument passed to a call to the mock
-  function in the same position as the matcher as declared in the call verification.
+  function of arity 1 that returns a boolean given a value. That value is an argument passed to a call to the mock
+  function in the same position as the matcher as declared in the call verification statement.
 
   ## Example
   ```
@@ -32,8 +30,8 @@ defmodule ElixirMock.Matchers do
   end
   ```
 
-  This module functions for common matching usecases like matching any argument, any number, e.t.c. See
-  this module's [functions list](#summary) for a list of in-built matchers.
+  This module functions for common matching use cases like matching any argument, matching only number arguments, e.t.c.
+  See this module's [functions list](#summary) for a list of in-built matchers.
   """
 
   @doc """
