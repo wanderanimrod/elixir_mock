@@ -201,7 +201,7 @@ defmodule ElixirMock do
     require ElixirMock
     import ElixirMock
 
-    test "verifies that function on mock was called" do
+    test "verifies that function on mock was not called" do
       mock = mock_of List
       mock.first [1, 2]
       refute_called mock.first(:some_other_arg) # passes
@@ -219,7 +219,7 @@ defmodule ElixirMock do
     import ElixirMock
     alias ElixirMock.Matchers
 
-    test "verifies that function on mock was called" do
+    test "verifies that function on mock was not called" do
       mock = mock_of List
       mock.first [1, 2]
       refute_called mock.first(Matchers.any(:number)) # passes
@@ -291,6 +291,24 @@ defmodule ElixirMock do
 
   @doc """
   A light wrapper that assigns names to mocks created with the `defmock_of/3` and `defmock_of/2` macros.
+
+  This is necessary because `defmock_of/3` and `defmock_of/2` return random mock module names wrapped in an ast tuple.
+  This little macro helps you give the random mock module a human-friendly name.
+
+  Example:
+  ```
+  defmodule MyTest do
+    use ExUnit.Case
+    require ElixirMock
+    import ElixirMock
+
+    test "a test" do
+      with_mock(my_custom_mock) = defmock_of List do end
+      # you can then use 'my_custom_mock' as a normal module
+      my_custom_mock.first([1, 2])
+    end
+  end
+  ```
   """
   defmacro with_mock(mock_var_name) do
     quote do
