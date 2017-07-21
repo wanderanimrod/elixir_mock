@@ -13,8 +13,7 @@ __Note__: Currently, only functions are ported from parent modules into mocks. M
 - A new mock module is created each time a mock definition is used. Each mock is completely independent of other mocks
  and does not replace or affect the real module it is based on in any way.
 - All calls to functions on a mock are recorded by function name and the arguments passed to that function in the call.
-- Mocks also have baked-in utility functions. For example, the `mock_context/1` helps with reading context injected into
-a mock at definition time.
+- Only public functions are copied from the parent module into the mock.
 
 ## Types of mocks
 
@@ -42,7 +41,7 @@ alter their behaviour. See the `ElixirMock.mock_of/1` documentation for an examp
 ElixirMock also allows you to define mocks that override some or all of the functions inherited from the module the mocks
 are based on. This is done using the `ElixirMock.defmock_of/2` and `ElixirMock.defmock_of/3` macros
 
-Example:
+__Example:__ Creating a mock of the inbuilt `List` module and overriding its `List.first/1` function.
 ```
 require ElixirMock
 import ElixirMock

@@ -94,21 +94,94 @@ defmodule ElixirMock do
   @doc """
   Creates a mock module from a real module allowing custom definitons for some or all of the functions on the mock.
 
-  Example:
+  Mock behaviour can be tuned in a number of different ways depending on your needs. The next few sections enumerate the
+  tuning options available with examples. We will use the inbuilt `List` module as our base module for these examples.
+
+  ## Feature: Overriding functions
+
+  Creating a mock from the `List` module and overriding its `List.first/1` function.
 
   ```
   require ElixirMock
   import ElixirMock
 
   with_mock(list_mock) = defmock_of List do
-    def first(_list), do: :mock_implementation
+    def first(_list), do: :mock_response_from_first
   end
 
-  list_mock.first([1, 2]) == :mock_implementation
+  list_mock.first([1, 2]) == :mock_response_from_first
   #=> true
   ```
 
-  For more on the options available within mock definitions, see [TODO: this page in docs](doc-link)
+  ## Feature: Delegating calls to the real module with `:call_through`
+
+  When a function in a mock defintion returns the atom `:call_through`, ElixirMock will forward all calls made to that
+  function to the corresponding function on the real module. All calls are still recorded by the mock and are inspectable
+  with the `assert_called/1` and `refute_called/1` macros.
+
+  ```
+  require ElixirMock
+  import ElixirMock
+
+  with_mock(list_mock) = defmock_of List do
+    def first(_list), do: :call_through
+  end
+
+  list_mock.first([1, 2]) == List.first([1, 2]) == 1
+  #=> true
+  ```
+
+  ## Feature: Delegating unspecified function calls to the real module
+
+  Sometimes, you only want to stub out specific functions on modules but leave other functions behaving as defined on the
+  original module. This could be because the overriden functions have side-effects you don't want to deal with in your
+  tests or because you want to alter the behaviour of just those functions so you can test code that depends on them.
+  ElixirMock provides the `@call_through_undeclared_functions` mock attribute to help with this. Mocks defined with this
+  attribute set to `true` will forward calls made to undeclared functions to the real module. Mocks defined without this
+  attribute simply return `nil` when calls are made to undeclared functions.
+
+  All functions calls, whether defined on the mock on not, are still recorded by the mock and are inspectable with the
+  `assert_called/1` and `refute_called/1` macros.
+
+  In the example below, the `List.first/1` function is overriden but the `List.last/1` function retains its original behaviour.
+  ```
+  require ElixirMock
+  import ElixirMock
+
+  with_mock(list_mock) = defmock_of List do
+    @call_through_undeclared_functions true
+    def first(_list), do: :mock_response_from_first
+  end
+
+  list_mock.first([1, 2]) == mock_response_from_first
+  list_mock.last([1, 2] == List.last([1, 2]) == 2
+  #=> true
+  ```
+
+  ## Info: Mock functions only override function heads of the same arity in the real module.
+  ```
+  defmodule Real do
+    def x, do: {:arity, 0}
+    def x(_arg), do: {:arity, 1}
+  end
+
+  with_mock(mock) = defmock_of Real do
+    def x, do: :overridden_x
+  end
+
+  mock.x == :overridden_x
+  #=> true
+  mock.x(:some_arg) == nil
+  #=> true
+  ```
+
+  ## Notes
+    - An `ElixirMock.MockDefinitionError` is raised if a _public_ function that does not exist in the real module is
+    declared on the mock.
+    - Mocks allow private functions to be defined on them. These functions needn't be defined on the real module. In fact,
+    private functions are not imported from the real module into the mock at all.
+    - Please refer to the [Getting started guide](mock_definition_docs.html#content) for a broader enumeration of the
+    characteristics of ElixirMock's mocks.
   """
   defmacro defmock_of(real_module, do: nil) do
     mock_name = random_module_name()
@@ -145,7 +218,7 @@ defmodule ElixirMock do
   #=> true
   ```
 
-  For more on the options available within mock definitions, see [TODO: this page in docs](doc-link)
+  For more on the options available within mock definitions, see `defmock_of/2`
   """
   defmacro defmock_of(real_module, context \\ {:%{}, [], []}, do: mock_ast) do
     call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
@@ -224,6 +297,7 @@ defmodule ElixirMock do
   #=> true
   ```
   """
+  @spec mock_of(module, atom) :: ElixirMock.Mock.mock
   def mock_of(real_module, :call_through),
     do: mock_of(real_module, true)
 
@@ -269,7 +343,7 @@ defmodule ElixirMock do
   end
   ```
   """
-  defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args} = _call) do
+  defmacro refute_called({{:., _, [mock_ast, fn_name]}, _, args} = _function_call_expression) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
 
@@ -316,7 +390,7 @@ defmodule ElixirMock do
   end
   ```
   """
-  defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args} = _call) do
+  defmacro assert_called({{:., _, [mock_ast, fn_name]}, _, args} = _function_call_expression) do
     quote bind_quoted: [mock_ast: mock_ast, fn_name: fn_name, args: args] do
       {mock_module, _} = Code.eval_quoted(mock_ast)
       {called, existing_calls} = mock_module.__elixir_mock__call_exists(fn_name, args)
@@ -348,9 +422,9 @@ defmodule ElixirMock do
   #=> nil
   ```
   """
-  defmacro with_mock(mock_var_name) do
+  defmacro with_mock(mock_name) do
     quote do
-      {_, unquote(mock_var_name), _, _}
+      {_, unquote(mock_name), _, _}
     end
   end
 
