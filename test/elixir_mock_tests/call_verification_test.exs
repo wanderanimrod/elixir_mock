@@ -47,7 +47,7 @@ defmodule ElixirMockTest.CallVerification do
     mock.function_one(10)
     assert_called mock.function_one(10)
 
-    mock.reset()
+    mock.__elixir_mock__reset()
 
     refute_called mock.function_one(10)
   end
@@ -56,7 +56,7 @@ defmodule ElixirMockTest.CallVerification do
     mock = mock_of RealModule
     mock.function_two(10, 12)
 
-    calls = mock.list_calls()
+    calls = mock.__elixir_mock__list_calls()
 
     assert calls == [{:function_two, [10, 12]}]
   end

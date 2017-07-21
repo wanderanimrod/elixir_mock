@@ -378,14 +378,14 @@ defmodule ElixirMock do
         GenServer.call(@watcher_proc, {:call_exists, fn_name, args})
       end
 
-      def reset do
+      def __elixir_mock__reset do
         :ok = GenServer.call(@watcher_proc, :clear_calls)
       end
 
-      def list_calls,
+      def __elixir_mock__list_calls,
         do: GenServer.call(@watcher_proc, :list_calls)
 
-      def mock_context(key) when is_atom(key) do
+      def __elixir_mock__mock_context(key) when is_atom(key) do
         value = Map.get(@mock_context, key)
         if value, do: value, else: (raise ArgumentError, "#{inspect key} not found in mock context #{inspect @mock_context}")
       end

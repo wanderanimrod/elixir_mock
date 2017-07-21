@@ -129,7 +129,7 @@ defmodule ElixirMockTest.Definition do
   test "should allow tests to inject context into mocks" do
     my_var = 10
     with_mock(mock) = defmock_of RealModule, %{injected_var: my_var} do
-      def function_one(_), do: mock_context(:injected_var)
+      def function_one(_), do: ElixirMock.Mock.context(:injected_var, __MODULE__)
     end
     assert mock.function_one(:blah) == my_var
   end
