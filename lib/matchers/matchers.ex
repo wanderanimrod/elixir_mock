@@ -30,8 +30,8 @@ defmodule ElixirMock.Matchers do
   end
   ```
 
-  This module functions for common matching use cases like matching any argument, matching only number arguments, e.t.c.
-  See this module's [functions list](#summary) for a list of in-built matchers.
+  The `ElixirMock.Matchers` module contains functions for common matching use cases like matching any argument,
+  matching only number arguments, e.t.c. See this module's [functions list](#summary) for a list of in-built matchers.
   """
 
   @doc """

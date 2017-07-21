@@ -1,10 +1,12 @@
 defmodule ElixirMock do
   @moduledoc """
   This module contains functions and macros for creating mocks from real modules. It also contains utilities for
-  verifying that calls were made to functions in the mocks, and inspecting the arguments that were passed to the mocks.
+  verifying that calls were made to functions in the mocks.
 
   The mocks created by this package are meant to be injected as dependencies into the module being tested. The mocks do
-  not replace the module they are constructed from.
+  not replace the module they are constructed from. Please refer to the [Getting started guide](mock_definition_docs.html#content)
+  for a gentle introduction to what these mocks are and how you can work with them in your tests.
+  Otherwise, read on to jump right into using ElixirMock.
 
   ## Examples
   The example below demonstrates how you would test that a module in your app, `MyApp.User`, makes a call to the
