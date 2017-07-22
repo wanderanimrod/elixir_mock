@@ -1,4 +1,4 @@
-# ElixirMock (alpha)
+# ElixirMock (alpha) ![CircleCI Build Status](https://circleci.com/gh/wanderanimrod/elixir_mock.png?style=shield)
 
 Creates inspectable mocks (test doubles) based on real elixir modules for testing. 
 
