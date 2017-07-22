@@ -26,14 +26,7 @@ defmodule ElixirMock.Mixfile do
     ]
   end
 
-  defp description do
-    """
-    Creates mock modules based on real elixir modules for testing. The mocks are inspectable, don't replace the original
-    modules the are based on and are fully independent of each other. Because of this isolation, mocks defined from the same
-    real module can be used in multiple tests running in parallel.
-    real module can be used in multiple tests running in parallel.
-    """
-  end
+  defp description, do: "Creates inspectable mocks (test doubles) based on real elixir modules for testing."
 
   defp package() do
     [
