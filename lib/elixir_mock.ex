@@ -181,7 +181,7 @@ defmodule ElixirMock do
     - Mocks allow private functions to be defined on them. These functions needn't be defined on the real module. In fact,
     private functions are not imported from the real module into the mock at all.
     - Please refer to the [Getting started guide](mock_definition_docs.html#content) for a broader enumeration of the
-    characteristics of ElixirMock's mocks.
+    characteristics of ElixirMock's '
   """
   defmacro defmock_of(real_module, do: nil) do
     mock_name = random_module_name()
@@ -221,7 +221,7 @@ defmodule ElixirMock do
   For more on the options available within mock definitions, see `defmock_of/2`
   """
   defmacro defmock_of(real_module, context \\ {:%{}, [], []}, do: mock_ast) do
-    call_through_unstubbed_fns = should_call_through_unstubbed_functions(mock_ast)
+    call_through_unstubbed_fns = call_through_unstubbed_functions?(mock_ast)
     mock_name = random_module_name()
     mock_fns = extract_mock_fns(mock_ast)
     stubs = Enum.map mock_fns, fn {_fn_type, {name, arity}} -> {name, arity} end
@@ -324,6 +324,9 @@ defmodule ElixirMock do
     end
   end
   ```
+  _Note that the function call expressions passed to the macro are not executed. Rather, they are deconstructed to get the function
+  name and the arguments. The function name and arguments are then used to find the call in the mocks recorded list of calls._
+
   When `refute_called/1` is given a matcher, the macro makes the test pass if the matcher evaluates to false for *all*
   recorded calls. See `ElixirMock.Matchers` for more juicy details on Matchers.
 
@@ -370,6 +373,9 @@ defmodule ElixirMock do
     end
   end
   ```
+
+  _Note that the function call expressions passed to the macro are not executed. Rather, they are deconstructed to get the function
+  name and the arguments. The function name and arguments are then used to find the call in the mocks recorded list of calls._
 
   When `assert_called/1` is given a matcher, the macro makes the test pass if the matcher
   evaluates to true for any recorded call. See `ElixirMock.Matchers` for more juicy details on Matchers.
@@ -482,7 +488,7 @@ defmodule ElixirMock do
     end
   end
 
-  defp should_call_through_unstubbed_functions({:__block__, _, contents}) do
+  defp call_through_unstubbed_functions?({:__block__, _, contents}) do
     contents
     |> Enum.filter(fn {member_type, _, _} -> member_type == :@ end)
     |> Enum.any?(fn {_, _, [{attr_name, _, [attr_val]}]} ->
@@ -490,7 +496,7 @@ defmodule ElixirMock do
     end)
   end
 
-  defp should_call_through_unstubbed_functions(_non_block_mock), do: false
+  defp call_through_unstubbed_functions?(_non_block_mock), do: false
 
   defp unstubbed_fns_ast(real_module, stubs, call_through) do
     quote do

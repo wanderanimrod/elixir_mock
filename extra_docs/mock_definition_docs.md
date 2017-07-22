@@ -57,8 +57,41 @@ For more details on the options available within custom mock definitions, see `E
 `ElixirMock.defmock_of/3` documentation.
 
 
+## Verifying calls on mocks
+
+The `ElixirMock.assert_called/1` and `ElixirMock.refute_called/1` macros allow you to verify which calls were made to a
+mock and which arguments were passed when those calls were made. 
+
+These macros take in an expression that looks exactly like the function call you expect to have or not have been made.
+The function call expressions passed are not executed. Rather, they are deconstructed to get the function name and the arguments.
+The function name and arguments are then used to find the call in the mocks recorded list of calls.
+
+Example:
+
+```
+defmodule MyTest do
+  use ExUnit.Case
+  require ElixirMock
+  import ElixirMock
+
+  test "verifies that function on mock was called" do
+    mock = mock_of List
+    
+    mock.first [1, 2]
+    
+    assert_called mock.first([1, 2]) # passes
+    refute_called mock.first(:some_other_arg) # passes
+  end
+end
+```
+
+For more details on how to do assertions against mocks, see the `ElixirMock.assert_called/1`, `ElixirMock.refute_called/1`,
+and `ElixirMock.Matchers` documentation pages.
+
+
 ## Managing mock state
 
-Mocks can be examined to find out what calls were made to them and what arguments were passed during those calls. See the
-`ElixirMock.Mock` module documentation for details.
-
+While the use of the inbuilt `ElixirMock.assert_called/1` and `ElixirMock.refute_called/1` macros is encouraged for 
+all simple cases, there are cases where access to the raw data stored in the mock is necessary. For those special cases,
+ElixirMock allows you to interrogate mocks for details on what calls were made to them and what arguments were passed 
+when those calls were made. For further details on how to do this, please refer to the `ElixirMock.Mock` module documentation.

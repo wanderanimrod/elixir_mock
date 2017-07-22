@@ -35,13 +35,15 @@ defmodule ElixirMock.Mock do
   ```
   require ElixirMock
   import ElixirMock
+  alias ElixirMock.Mock
 
   my_mock = mock_of Integer
 
   my_mock.to_string 1
   my_mock.digits 1234
 
-  ElixirMock.Mock.list_calls(my_mock) == [:to_string: [1], digits: [1234]]
+  Mock.list_calls(my_mock) == [:to_string: [1], digits: [1234]]
+  #=> true
   ```
   """
   @spec list_calls(ElixirMock.Mock.mock) :: list(tuple)
@@ -55,6 +57,26 @@ defmodule ElixirMock.Mock do
   Every time a function on a mock is called, the mock registers that call and keeps it for its whole lifespan. This data
   is what assertion macros like `ElixirMock.assert_called/1` use. The `clear_calls/1` function removes all recorded calls
   from the mock, in effect taking it back into the state it was at definition time.
+
+  Example:
+    ```
+    defmodule MyTest do
+      use ExUnit.Case
+      require ElixirMock
+      import ElixirMock
+      alias ElixirMock.Mock
+
+      test "should clear mock calls" do
+        my_mock = mock_of Integer
+
+        my_mock.to_string(1)
+        assert_called my_mock.to_string(1) # passes
+
+        :ok = Mock.clear_calls(my_mock)
+        assert_called my_mock.to_string(1) # fails!
+      end
+    end
+    ```
   """
   @spec clear_calls(ElixirMock.Mock.mock) :: :ok
   def clear_calls(mock) do
