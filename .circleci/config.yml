@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/elixir_mock
     docker:
-      - image: trenpixster/elixir:1.4.4
+      - image: circleci/elixir:1.4
     steps:
       - checkout
       - run: mix deps.get
