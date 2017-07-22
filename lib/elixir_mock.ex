@@ -2,66 +2,6 @@ defmodule ElixirMock do
   @moduledoc """
   This module contains functions and macros for creating mocks from real modules. It also contains utilities for
   verifying that calls were made to functions in the mocks.
-
-  The mocks created by this package are meant to be injected as dependencies into the module being tested. The mocks do
-  not replace the module they are constructed from. Please refer to the [Getting started guide](mock_definition_docs.html#content)
-  for a gentle introduction to what these mocks are and how you can work with them in your tests.
-  Otherwise, read on to jump right into using ElixirMock.
-
-  ## Examples
-  The example below demonstrates how you would test that a module in your app, `MyApp.User`, makes a call to the
-  facebook api with the right parameters and returns to you whatever the facebook api returns.
-
-  First, let's define a module that wraps the Facebook API. This could be your own module, or one from a hex package
-  ```
-  defmodule FacebookApiWrapper do
-    # makes api call to facebook
-    def get_profile(profile_id), do: :real_facebook_user_profile
-  end
-  ```
-
-  Next, we define a module in our app that we are going to test. This is the module that will go through the
-  `FacebookApiWrapper` to fetch the user's profile from facebook
-  ```
-  defmodule MyApp.User do
-    # allow function under test to accept injected api wrapper dependency
-    def load_user(user_id, api_wrapper \\\\ FacebookApiWrapper) do
-      api_wrapper.get_profile(user_id)
-    end
-  end
-  ```
-
-  Now we are ready to test our `MyApp.User` module's `load_user/2` functionality
-
-  ```
-  defmodule MyApp.UserTest do
-    use ExUnit.Case, async: true # yes, you can run tests that use mocks in parallel
-    require ElixirMock
-    import ElixirMock
-    alias ElixirMock.Matchers
-
-    test "should get user profile from facebook api when user is loaded" do
-      # create mock module with the same functions as the `FacebookApiWrapper` module.
-      mock_facebook = mock_of FacebookApiWrapper
-
-      # Call the function you are testing, injecting mock FacebookApiWrapper
-      user = MyApp.User.load_user("some-user-id", mock_facebook)
-
-      # Check that facebook was called with the user id we passed to MyApp.User.load_user/1
-      assert_called mock_facebook.get_profile("some-user-id") # passes
-    end
-
-    test "we can also define custom behaviour for our mocks using the defmock_of macro" do
-      with_mock(mock_facebook) = defmock_of FacebookApiWrapper do
-        def get_profile(_), do: "a custom response from the mock"
-      end
-      user = MyApp.User.load_user("some-user-id", mock_facebook)
-      assert user == "a custom response from the mock"
-    end
-  end
-  ```
-
-  There's plenty more `ElixirMock` can do. Please refer to the rest of the docs for more hidden treasures :)
   """
 
   # TODO: This module has too many public functions and macros that should really be private

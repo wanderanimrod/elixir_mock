@@ -47,7 +47,8 @@ defmodule ElixirMock.Mixfile do
 
   defp docs do
     [
-      extras: ["extra_docs/mock_definition_docs.md"]
+      main: "getting_started",
+      extras: ["extra_docs/getting_started.md"]
     ]
   end
 end
