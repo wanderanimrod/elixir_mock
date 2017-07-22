@@ -10,7 +10,7 @@ The mocks do not replace or modify the original modules the are based on and are
 by adding `elixir_mock` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
-  [{:elixir_mock, "~> 0.2.2"}]
+  [{:elixir_mock, "~> 0.2.3"}] # or whatever the latest version is
 end
 ```
 
@@ -45,7 +45,7 @@ Next, we define a module in our app that we are going to test. This is the modul
 ```elixir
 defmodule MyApp.User do
   # allow function under test to accept injected api client dependency
-  def load_user(user_id, facebook_client \\\\ FacebookClient) do
+  def load_user(user_id, facebook_client \\ FacebookClient) do
     facebook_client.get_profile(user_id)
   end
 end
