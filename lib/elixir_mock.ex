@@ -93,7 +93,7 @@ defmodule ElixirMock do
     def first(_list), do: :mock_response_from_first
   end
 
-  list_mock.first([1, 2]) == mock_response_from_first
+  list_mock.first([1, 2]) == :mock_response_from_first
   list_mock.last([1, 2] == List.last([1, 2]) == 2
   #=> true
   ```
@@ -120,8 +120,8 @@ defmodule ElixirMock do
     declared on the mock.
     - Mocks allow private functions to be defined on them. These functions needn't be defined on the real module. In fact,
     private functions are not imported from the real module into the mock at all.
-    - Please refer to the [Getting started guide](mock_definition_docs.html#content) for a broader enumeration of the
-    characteristics of ElixirMock's '
+    - Please refer to the [Getting started guide](getting_started.html) for a broader enumeration of the
+    characteristics of ElixirMock's mocks.
   """
   defmacro defmock_of(real_module, do: nil) do
     mock_name = random_module_name()
