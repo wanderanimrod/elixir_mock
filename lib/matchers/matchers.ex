@@ -29,9 +29,39 @@ defmodule ElixirMock.Matchers do
     end
   end
   ```
-
   The `ElixirMock.Matchers` module contains functions for common matching use cases like matching any argument,
   matching only number arguments, e.t.c. See this module's [functions list](#summary) for a list of in-built matchers.
+
+  ## Deep matching with maps
+
+  When a function under test is expecting map arguments, matchers can be used in the match expression for some or all
+  of the map's keys. When a value of a key in an call verification statement is found to be a matcher expression, the
+  matcher expression is evaluated with the corresponding value in the actual map argument. If all present matchers in the
+  expected map evaluate to `true` for the corresponding values in the actual map and the values of all the other keys
+  in the expected map match the values of the same keys in the actual map, the call verification statement passes.
+
+  ```
+  defmodule MyTest do
+    use ExUnit.Case
+    require ElixirMock
+    import ElixirMock
+    alias ElixirMock.Matchers
+
+    defmodule MyModule do
+      def echo(what_to_say), do: IO.puts(inspect(what_to_say))
+    end
+
+    test "echo/1 should have been called with the correct map" do
+      mock = mock_of MyModule
+      mock.echo %{a: 1, b: :something}
+      assert_called mock.echo(%{a: Matchers.any(:int), b: Matchers.any(:atom)}) # passes
+    end
+  end
+  ```
+
+  __Also, note that:__
+  - All the [matchers](#summary) availabe in this module can be used within maps in this fashion.
+  - Matching on map values with matchers can be done with nested maps of arbitrary depth.
   """
 
   @doc """
@@ -144,16 +174,19 @@ defmodule ElixirMock.Matchers do
 
   defp match_call_args(expected_args, actual_args) do
     Enum.zip(expected_args, actual_args)
-    |> Enum.all?(fn {expected, actual} ->
-      case expected do
-        {:__elixir_mock__literal, explicit_literal} -> explicit_literal == actual
-        {:matches, matcher} -> _match_args(matcher, actual)
-        implicit_literal -> implicit_literal == actual
-      end
-    end)
+    |> Enum.all?(fn {expected, actual} -> match_arg_pair(expected, actual) end)
   end
 
-  defp _match_args(matcher, actual) when is_function(matcher) do
+  defp match_arg_pair(expected, actual) do
+    case expected do
+      {:__elixir_mock__literal, explicit_literal} -> explicit_literal == actual
+      {:matches, matcher} -> evaluate_matcher(matcher, actual)
+      %{} -> deep_match(expected, actual)
+      implicit_literal -> implicit_literal == actual
+    end
+  end
+
+  defp evaluate_matcher(matcher, actual) when is_function(matcher) do
     matcher_arity = :erlang.fun_info(matcher)[:arity]
     error_message = "Use of bad function matcher '#{inspect matcher}' in match expression.
     Argument matchers must be functions with arity 1. This function has arity #{matcher_arity}"
@@ -163,10 +196,24 @@ defmodule ElixirMock.Matchers do
     matcher.(actual)
   end
 
-  defp _match_args(_, non_function_matcher) do
+  defp evaluate_matcher(_, non_function_matcher) do
     error_message = "Use of non-function matcher '#{inspect non_function_matcher}' in match expression.
     Argument matchers must be in the form {:matches, &matcher_function/1}. If you expected your stubbed function to have
     been called with literal {:matches, #{inspect non_function_matcher}}, use ElixirMock.Matchers.literal({:matches, #{inspect non_function_matcher}})"
     raise ArgumentError, message: error_message
+  end
+
+  defp deep_match(%{} = _expected, actual) when not is_map(actual) , do: false
+
+  defp deep_match(%{} = expected, %{} = actual) do
+    Map.keys(actual)
+    |> Enum.all?(&Map.has_key?(expected, &1))
+    |> Kernel.and(
+      Enum.all? expected, fn {expected_key, expected_val} ->
+        if Map.has_key?(actual, expected_key),
+          do: match_arg_pair(expected_val, actual[expected_key]),
+          else: false
+      end
+    )
   end
 end

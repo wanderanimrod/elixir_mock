@@ -1,8 +1,8 @@
 defmodule ElixirMock.MatchersTest do
   use ExUnit.Case, async: true
   require ElixirMock
-
   import ElixirMock.Matchers
+  alias ElixirMock.Matchers
   import ElixirMock
 
   defmodule RealModule do
@@ -44,4 +44,31 @@ defmodule ElixirMock.MatchersTest do
     assert literal({:matches, 10}) == {:__elixir_mock__literal, {:matches, 10}}
   end
 
+  test "should 'deep match' on map argument expectations" do
+    mock = mock_of RealModule
+    mock.function_one %{key_one: :val_one, key_two: :val_two}
+    assert_called mock.function_one(%{key_one: {:matches, fn val -> val == :val_one end}, key_two: :val_two})
+    assert_called mock.function_one(%{key_one: Matchers.any(:atom), key_two: Matchers.any})
+  end
+
+  test "should not deep match on map argument expectations if actual args are not a map" do
+    mock = mock_of RealModule
+    mock.function_one 10
+    refute_called mock.function_one(%{key: {:matches, fn _ -> true end}})
+  end
+
+  test "'deep matching' should be recursive" do
+    is_eq_10 = {:matches, fn val -> val == 10 end}
+    mock = mock_of RealModule
+
+    mock.function_one %{key_1: %{key_2: %{key_3: 10}}}
+
+    assert_called mock.function_one(%{key_1: %{key_2: %{key_3: is_eq_10}}})
+  end
+
+  test "should not match map arguments when keys missing in expected map are present in actual map" do
+    mock = mock_of RealModule
+    mock.function_one %{key: 1, other_key: 2}
+    refute_called mock.function_one(%{key: 1})
+  end
 end
