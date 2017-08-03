@@ -1,4 +1,4 @@
-# ElixirMock (alpha) ![CircleCI Build Status](https://circleci.com/gh/wanderanimrod/elixir_mock.png?style=shield)
+# ElixirMock ![CircleCI Build Status](https://circleci.com/gh/wanderanimrod/elixir_mock.png?style=shield)
 
 Creates inspectable mocks (test doubles) based on real elixir modules for testing. 
 
@@ -10,7 +10,7 @@ The mocks do not replace or modify the original modules the are based on and are
 by adding `elixir_mock` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
-  [{:elixir_mock, "~> 0.2.3", only: :test}] # or whatever the latest version is
+  [{:elixir_mock, "~> 0.2.4", only: :test}] # or whatever the latest version is
 end
 ```
 
