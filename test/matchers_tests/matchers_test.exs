@@ -1,8 +1,8 @@
 defmodule ElixirMock.MatchersTest do
   use ExUnit.Case, async: true
   require ElixirMock
-
   import ElixirMock.Matchers
+  alias ElixirMock.Matchers
   import ElixirMock
 
   defmodule RealModule do
@@ -48,6 +48,7 @@ defmodule ElixirMock.MatchersTest do
     mock = mock_of RealModule
     mock.function_one %{key_one: :val_one, key_two: :val_two}
     assert_called mock.function_one(%{key_one: {:matches, fn val -> val == :val_one end}, key_two: :val_two})
+    assert_called mock.function_one(%{key_one: Matchers.any(:atom), key_two: Matchers.any})
   end
 
   test "should not deep match on map argument expectations if actual args are not a map" do
