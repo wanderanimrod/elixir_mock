@@ -208,12 +208,16 @@ defmodule ElixirMock.Matchers do
   defp deep_match(%{} = expected, %{} = actual) do
     Map.keys(actual)
     |> Enum.all?(&Map.has_key?(expected, &1))
-    |> Kernel.and(
-      Enum.all? expected, fn {expected_key, expected_val} ->
-        if Map.has_key?(actual, expected_key),
-          do: match_arg_pair(expected_val, actual[expected_key]),
-          else: false
-      end
-    )
+    |> Kernel.and(all_kv_pairs_are_equal(expected, actual))
+  end
+
+  defp all_kv_pairs_are_equal(expected, actual) do
+    expected
+    |> Map.to_list
+    |> Enum.all?(fn {expected_key, expected_val} ->
+      if Map.has_key?(actual, expected_key),
+         do: match_arg_pair(expected_val, Map.get(actual, expected_key)),
+         else: false
+    end)
   end
 end

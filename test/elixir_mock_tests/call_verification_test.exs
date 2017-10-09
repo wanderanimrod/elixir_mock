@@ -10,6 +10,10 @@ defmodule ElixirMockTest.CallVerification do
     def function_two(_arg1, _arg2), do: :real_result_two
   end
 
+  defmodule Person do
+    defstruct id: nil
+  end
+
   test "should tell if a stubbed function was called on mock" do
     with_mock(mock) = defmock_of RealModule do
       def function_one(_) do
@@ -59,6 +63,15 @@ defmodule ElixirMockTest.CallVerification do
     calls = mock.__elixir_mock__list_calls()
 
     assert calls == [{:function_two, [10, 12]}]
+  end
+
+  test "should be able to verify that function was called with a struct" do
+    person = %Person{id: 1}
+    mock = mock_of RealModule
+
+    mock.function_one(person)
+
+    assert_called mock.function_one(person)
   end
 
   # todo assert that watcher process dies with the test process (using spawn? or Task.async & Task.await)

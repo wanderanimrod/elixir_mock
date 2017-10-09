@@ -10,7 +10,7 @@ The mocks do not replace or modify the original modules the are based on and are
 by adding `elixir_mock` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
-  [{:elixir_mock, "~> 0.2.4", only: :test}] # or whatever the latest version is
+  [{:elixir_mock, "~> 0.2.5", only: :test}] # or whatever the latest version is
 end
 ```
 
