@@ -2,6 +2,10 @@ defmodule ElixirMock.Matchers.AnyTest do
   use ExUnit.Case, async: true
   import ElixirMock.Matchers.InBuilt
 
+  defmodule Person do
+    defstruct id: nil
+  end
+
   test "should test if arg is an integer" do
     assert any(:integer).(10)
     refute any(:integer).(12.6)
@@ -56,6 +60,11 @@ defmodule ElixirMock.Matchers.AnyTest do
   test "should test if arg is a tuple" do
     assert any(:tuple).({})
     refute any(:tuple).(%{})
+  end
+
+  test "should test if arg is a struct of a given type" do
+    assert any(%Person{}).(%Person{})
+    refute any(%Person{}).(%{})
   end
 
   test "should test if arg matches anything" do

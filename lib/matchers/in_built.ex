@@ -15,6 +15,7 @@ defmodule ElixirMock.Matchers.InBuilt do
       :number -> &is_number/1
       :pid -> &is_pid/1
       :tuple -> &is_tuple/1
+      %{__struct__: struct_type} -> &(is_map(&1) && Map.has_key?(&1, :__struct__) && &1.__struct__ == struct_type)
       unknown_type -> raise ArgumentError, message: "Type #{inspect unknown_type} is not supported by this matcher"
     end
   end

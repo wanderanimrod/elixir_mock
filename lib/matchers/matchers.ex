@@ -102,8 +102,8 @@ defmodule ElixirMock.Matchers do
   A matcher that matches an argument only if it is of a specified type.
 
   Supported types are `:atom`, `:binary`, `:boolean`, `:float`, `:function`, `:integer`, `:list`, `:map`, `:number`,
-  `:pid`, `:tuple` and `:_` (equivalent to using `any/0`). An `ArgumentError` is thrown if an argument not in this
-  list is passed to the function.
+  `:pid`, `:tuple`, any struct (e.g., `%Person{}`), and `:_` (equivalent to using `any/0`). An `ArgumentError` is thrown
+  if an argument not in this list is passed to the function.
 
   Example:
   ```
