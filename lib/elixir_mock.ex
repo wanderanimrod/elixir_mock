@@ -408,8 +408,11 @@ defmodule ElixirMock do
         do: GenServer.call(@watcher_proc, :list_calls)
 
       def __elixir_mock__mock_context(key) when is_atom(key) do
-        value = Map.get(@mock_context, key)
-        if value, do: value, else: (raise ArgumentError, "#{inspect key} not found in mock context #{inspect @mock_context}")
+        if Map.has_key?(@mock_context, key) do
+          Map.get(@mock_context, key)
+        else
+          raise ArgumentError, "#{inspect key} not found in mock context #{inspect @mock_context}"
+        end
       end
     end
   end
