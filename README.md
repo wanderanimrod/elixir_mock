@@ -1,6 +1,6 @@
 # ElixirMock ![CircleCI Build Status](https://circleci.com/gh/wanderanimrod/elixir_mock.png?style=shield)
 
-Creates inspectable mocks (test doubles) based on real elixir modules for testing. 
+Creates inspectable mocks (test doubles) based on real elixir modules for testing.
 
 The mocks do not replace or modify the original modules the are based on and are fully independent of each other. Because of this isolation, mocks defined from the same real module can be used in multiple tests running in parallel. Also, tests using mocks defined from a real module can run in parallel with other tests that depend on the real module.
 
@@ -10,7 +10,7 @@ The mocks do not replace or modify the original modules the are based on and are
 by adding `elixir_mock` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
-  [{:elixir_mock, "~> 0.2.6", only: :test}] # or whatever the latest version is
+  [{:elixir_mock, "~> 0.2.7", only: :test}] # or whatever the latest version is
 end
 ```
 
@@ -19,11 +19,11 @@ end
 ElixirMock helps you create inspectable test doubles (mocks) for use within your ExUnit tests.
 
 ElixirMock mocks are just modules defined based on other modules ("real modules"). The mocks are created at compile-time
-by copying public functions from the real module to the mock module, with a few modifications that allow calls to the 
-mock's functions to be recorded and inspected later by tests. 
+by copying public functions from the real module to the mock module, with a few modifications that allow calls to the
+mock's functions to be recorded and inspected later by tests.
 
-The mocks do not replace or modify in any way the modules  they are based on. They are only meant to be injected as 
-dependencies into functions under test. 
+The mocks do not replace or modify in any way the modules  they are based on. They are only meant to be injected as
+dependencies into functions under test.
 
 ## Example
 The example below demonstrates how you would test that a module in your app, `MyApp.User`, makes a call to the
@@ -74,7 +74,7 @@ defmodule MyApp.UserTest do
 end
 ```
 
-We can even go a step further. We can test that the `MyApp.User.load_user/1` function actually returns what the facebook api returns. To do this, we fix the responses from the Facebook API using the `ElixirMock.defmock_of/2` macro and check that our code returns those fixed responses. 
+We can even go a step further. We can test that the `MyApp.User.load_user/1` function actually returns what the facebook api returns. To do this, we fix the responses from the Facebook API using the `ElixirMock.defmock_of/2` macro and check that our code returns those fixed responses.
 ```elixir
 defmodule MyApp.UserTest do
   use ExUnit.Case, async: true
@@ -95,7 +95,7 @@ There's plenty more ElixirMock can do. Please refer to the rest of this page for
 
 ## Characteristics of mocks
 - Every mock module has a unique, random UUID atom as its name. You can use `ElixirMock.with_mock/1` to give your mock a fixed human-friendly name.
-- All functions on a mock return `nil` unless otherwise specified with the `ElixirMock.defmock_of/2` or 
+- All functions on a mock return `nil` unless otherwise specified with the `ElixirMock.defmock_of/2` or
 `ElixirMock.defmock_of/3` macros.
 - A new mock module is created each time a mock definition is used. Each mock is completely independent of other mocks and does not replace or affect the real module it is based on in any way. This allows you to run tests that make use of mocks in parallel with other tests that use the real modules the mocks are based on, or other tests using mocks based on the same real modules.
 - All calls to functions on a mock are recorded by function name and the arguments passed to that function in the call.
@@ -106,9 +106,9 @@ There's plenty more ElixirMock can do. Please refer to the rest of this page for
 There are currently two kinds of mocks you can define with ElixirMock
 
 ### The simple mock
-Simple mocks are defined using the `ElixirMock.mock_of/1` function. They are based on already existing modules (referred to as "parent modules"). Once defined, these mocks inherit all functions defined on the parent module with their implementations stubbed out to return nil. They are called simple mocks because they do not specify any special behaviour for the mock's functions. 
+Simple mocks are defined using the `ElixirMock.mock_of/1` function. They are based on already existing modules (referred to as "parent modules"). Once defined, these mocks inherit all functions defined on the parent module with their implementations stubbed out to return nil. They are called simple mocks because they do not specify any special behaviour for the mock's functions.
 
-Example: 
+Example:
 
 Creating a mock module that has the same api as the in-built elixir `List` module but with its functions returning `nil`.
 ```elixir
@@ -116,7 +116,7 @@ require ElixirMock
 import ElixirMock
 
 list_mock = mock_of List
-list_mock.first([1, 2]) == nil 
+list_mock.first([1, 2]) == nil
 #=> true
 
 list_mock.last([1, 2]) == nil
@@ -144,7 +144,7 @@ For more details on the options available within custom mock definitions, see `E
 
 ## Verifying calls on mocks
 
-The `ElixirMock.assert_called/1` and `ElixirMock.refute_called/1` macros allow you to verify which calls were made to  mock and which arguments were passed when those calls were made. 
+The `ElixirMock.assert_called/1` and `ElixirMock.refute_called/1` macros allow you to verify which calls were made to  mock and which arguments were passed when those calls were made.
 
 These macros take in an expression that looks exactly like the function call you expect to have or not have been made. The function call expressions passed are not executed. Rather, they are deconstructed to get the function name and the arguments. The function name and arguments are then used to find the call in the mocks recorded list of calls.
 
@@ -158,9 +158,9 @@ defmodule MyTest do
 
   test "verifies that function on mock was called" do
     mock = mock_of List
-    
+
     mock.first [1, 2]
-    
+
     assert_called mock.first([1, 2]) # passes
     refute_called mock.first(:some_other_arg) # passes
   end
@@ -176,6 +176,5 @@ While the use of the inbuilt `ElixirMock.assert_called/1` and `ElixirMock.refute
 
 ## Contributing
 Should you enjoy using this package, please let me know [@wanderanimrod](https://twitter.com/wanderanimrod). If you don't like it for good reasons, please
-let me know too. If you find a bug or have a feature or pull request, please create an issue on 
+let me know too. If you find a bug or have a feature or pull request, please create an issue on
 [github](https://github.com/wanderanimrod/elixir_mock/issues) and I'll be glad to help.
-
