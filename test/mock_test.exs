@@ -7,14 +7,14 @@ defmodule MockTest do
 
   test "should reset mock get mock context" do
     with_mock(mock) = defmock_of List, %{fixed_answer: 10} do
-      def first(_), do: Mock.context(:fixed_answer, __MODULE__)
+      def first(_), do: ElixirMock.Mock.context(:fixed_answer, __MODULE__)
     end
     assert mock.first([]) == 10
   end
 
   test "should allow nil values in mock context" do
     with_mock(mock) = defmock_of List, %{fixed_answer: nil} do
-      def first(_), do: Mock.context(:fixed_answer, __MODULE__)
+      def first(_), do: ElixirMock.Mock.context(:fixed_answer, __MODULE__)
     end
     assert mock.first([]) == nil
   end

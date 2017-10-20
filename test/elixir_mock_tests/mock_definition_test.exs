@@ -44,7 +44,7 @@ defmodule ElixirMockTest.Definition do
     assert mock.function_one(1) == RealModule.function_one(1)
     assert mock.function_two(1, 2) == RealModule.function_two(1, 2)
   end
-  
+
   test "should allow creation of mock with all unspecified functions calling through" do
     with_mock(mock) = defmock_of RealModule do
       @call_through_undeclared_functions true
@@ -134,6 +134,44 @@ defmodule ElixirMockTest.Definition do
     assert mock.function_one(:blah) == my_var
   end
 
+  test "should have unique random names when defining multiple mocks from a function when using defmock_of with no body or context" do
+    {:module, mock_one_name, _, _} = create_mock()
+    {:module, mock_two_name, _, _} = create_mock()
+
+    refute mock_one_name == mock_two_name
+  end
+
+  test "should have unique random names when defining multiple mocks from a function when using defmock_of with body but no context" do
+    {:module, mock_one_name, _, _} = create_mock_with_body()
+    {:module, mock_two_name, _, _} = create_mock_with_body()
+
+    refute mock_one_name == mock_two_name
+  end
+
+  test "should have unique random names when defining multiple mocks from a function when using defmock_of with a body and a context" do
+    {:module, mock_one_name, _, _} = create_mock_with_body_and_context()
+    {:module, mock_two_name, _, _} = create_mock_with_body_and_context()
+
+    refute mock_one_name == mock_two_name
+  end
+
+  defp create_mock do
+    defmock_of RealModule do end
+  end
+
+  defp create_mock_with_body do
+    defmock_of RealModule do
+      def function_one(_), do: :fake_result_one
+    end
+  end
+
+  defp create_mock_with_body_and_context do
+    result = :fake_result_one
+    defmock_of RealModule, %{result: result} do
+      def function_one(_), do: ElixirMock.Mock.context(:result)
+    end
+  end
+
   # todo add :debug option to mock definition that pretty prints the mock code.
-  
+
 end

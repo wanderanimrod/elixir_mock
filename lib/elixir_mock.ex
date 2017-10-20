@@ -124,9 +124,8 @@ defmodule ElixirMock do
     characteristics of ElixirMock's mocks.
   """
   defmacro defmock_of(real_module, do: nil) do
-    mock_name = random_module_name()
     quote do
-      ElixirMock.create_mock(unquote(real_module), unquote(mock_name))
+      ElixirMock.create_mock(unquote(real_module))
     end
   end
 
@@ -162,42 +161,39 @@ defmodule ElixirMock do
   """
   defmacro defmock_of(real_module, context \\ {:%{}, [], []}, do: mock_ast) do
     call_through_unstubbed_fns = call_through_unstubbed_functions?(mock_ast)
-    mock_name = random_module_name()
     mock_fns = extract_mock_fns(mock_ast)
     stubs = Enum.map mock_fns, fn {_fn_type, {name, arity}} -> {name, arity} end
 
     quote do
-     verify_mock_structure(unquote(mock_fns), unquote(real_module))
-     {:ok, _pid} = MockWatcher.start_link(unquote(mock_name))
+      real_module = unquote(real_module)
+      mock_fns = unquote(mock_fns)
+      context = Macro.escape(unquote(context))
+      stubs = Macro.escape(unquote(stubs))
+      mock_ast = unquote(Macro.escape(mock_ast))
+      call_through_unstubbed_fns = unquote(call_through_unstubbed_fns)
 
-     defmodule unquote(mock_name) do
-       require ElixirMock
+      mock_module_name = random_module_name()
 
-       unquote(mock_ast |> inject_elixir_mock_function_utilities |> apply_stub_call_throughs(real_module))
+      verify_mock_structure(mock_fns, real_module)
 
-       unquote(unstubbed_fns_ast(real_module, stubs, call_through_unstubbed_fns))
+      {:ok, _pid} = MockWatcher.start_link(mock_module_name)
 
-       ElixirMock.inject_elixir_mock_utilities(unquote(context))
-     end
+      contents = mock_contents(real_module, mock_ast, stubs, context, call_through_unstubbed_fns)
+
+      Module.create(mock_module_name, contents, Macro.Env.location(__ENV__))
     end
   end
 
   @doc false
-  defmacro create_mock(real_module, mock_module_name, call_through \\ false) do
+  defmacro create_mock(real_module, mock_module_name \\ nil, call_through \\ false) do
     quote do
-      {:ok, _pid} = MockWatcher.start_link(unquote(mock_module_name))
+      mock_module_name = unquote(mock_module_name) || random_module_name()
 
-      defmodule unquote(mock_module_name) do
-        require ElixirMock
+      {:ok, _pid} = MockWatcher.start_link(mock_module_name)
 
-        real_functions =
-          unquote(real_module).__info__(:functions)
-          |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through)} end)
+      contents = mock_contents(unquote(real_module), unquote(call_through))
 
-        ElixirMock.inject_monitored_real_functions(unquote(real_module), real_functions)
-
-        ElixirMock.inject_elixir_mock_utilities(%{})
-      end
+      Module.create(mock_module_name, contents, Macro.Env.location(__ENV__))
     end
   end
 
@@ -431,6 +427,38 @@ defmodule ElixirMock do
     end
   end
 
+  @doc false
+  def random_module_name, do: :"#{UUID.uuid4(:hex)}"
+
+  @doc false
+  def mock_contents(real_module, mock_ast, stubs, context, call_through_unstubbed_fns) do
+    quote do
+      require ElixirMock
+
+      unquote(mock_ast |> inject_elixir_mock_function_utilities |> apply_stub_call_throughs(real_module))
+
+      ElixirMock.inject_monitored_real_functions(unquote(real_module),
+                                                 unquote(real_module).__info__(:functions)
+                                                 |> Enum.filter(fn {fn_name, arity} -> not {fn_name, arity} in unquote(stubs) end)
+                                                 |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through_unstubbed_fns)} end))
+
+      ElixirMock.inject_elixir_mock_utilities(unquote(context))
+    end
+  end
+
+  @doc false
+  def mock_contents(real_module, call_through) do
+    quote do
+      require ElixirMock
+
+      ElixirMock.inject_monitored_real_functions(unquote(real_module),
+                                                 unquote(real_module).__info__(:functions)
+                                                  |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through)} end))
+
+      ElixirMock.inject_elixir_mock_utilities(%{})
+    end
+  end
+
   defp call_through_unstubbed_functions?({:__block__, _, contents}) do
     contents
     |> Enum.filter(fn {member_type, _, _} -> member_type == :@ end)
@@ -440,19 +468,6 @@ defmodule ElixirMock do
   end
 
   defp call_through_unstubbed_functions?(_non_block_mock), do: false
-
-  defp unstubbed_fns_ast(real_module, stubs, call_through) do
-    quote do
-      unstubbed_fns =
-        unquote(real_module).__info__(:functions)
-        |> Enum.filter(fn {fn_name, arity} -> not {fn_name, arity} in unquote(stubs) end)
-        |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through)} end)
-
-      ElixirMock.inject_monitored_real_functions(unquote(real_module), unstubbed_fns)
-    end
-  end
-
-  defp random_module_name, do: :"#{UUID.uuid4(:hex)}"
 
   defp random_arg_name, do: :"elixir_mock_unignored__#{UUID.uuid4(:hex)}"
 
