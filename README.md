@@ -1,4 +1,6 @@
-# ElixirMock ![CircleCI Build Status](https://circleci.com/gh/wanderanimrod/elixir_mock.png?style=shield)
+# ElixirMock 
+
+![CircleCI Build Status](https://circleci.com/gh/wanderanimrod/elixir_mock.png?style=shield) [![Hex pm](http://img.shields.io/hexpm/v/elixir_mock.svg?style=flat)](https://hex.pm/packages/elixir_mock)
 
 Creates inspectable mocks (test doubles) based on real elixir modules for testing.
 
