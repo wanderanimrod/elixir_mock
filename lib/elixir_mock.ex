@@ -421,7 +421,7 @@ defmodule ElixirMock do
     invalid_stubs =
       mock_fns
       |> Enum.filter(fn {fn_type, _} -> fn_type == :def end)
-      |> Enum.filter(fn {:def, stub} -> not stub in real_functions end)
+      |> Enum.filter(fn {:def, stub} -> not(stub in real_functions) end)
       |> Enum.map(fn {:def, stub} -> stub end)
 
     if not Enum.empty?(invalid_stubs) do
@@ -441,7 +441,7 @@ defmodule ElixirMock do
 
       ElixirMock.inject_monitored_real_functions(unquote(real_module),
                                                  unquote(real_module).module_info(:exports)
-                                                 |> Enum.filter(fn {fn_name, arity} -> not {fn_name, arity} in unquote(stubs) end)
+                                                 |> Enum.filter(fn {fn_name, arity} -> not({fn_name, arity} in unquote(stubs)) end)
                                                  |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through_unstubbed_fns)} end))
 
       ElixirMock.inject_elixir_mock_utilities(unquote(context))
