@@ -11,7 +11,9 @@ defmodule ElixirMock do
   @doc false
   defmacro inject_monitored_real_functions(real_module, real_functions) do
     quote bind_quoted: [real_module: real_module, real_functions: real_functions] do
-      Enum.map real_functions, fn {fn_name, arity, call_through} ->
+      real_functions
+      |> Enum.reject(fn {fn_name, _, _} -> fn_name in [:module_info, :__info__, :is_record] end)
+      |> Enum.map(fn {fn_name, arity, call_through} ->
         args = case arity do
           0 -> []
           _ -> 1..arity |> Enum.map(&(Macro.var(:"arg_#{&1}", __MODULE__)))
@@ -27,7 +29,7 @@ defmodule ElixirMock do
           end
 
         end
-      end
+      end)
     end
   end
 
@@ -415,7 +417,7 @@ defmodule ElixirMock do
 
   @doc false
   def verify_mock_structure(mock_fns, real_module) do
-    real_functions = real_module.__info__(:functions)
+    real_functions = real_module.module_info(:exports)
     invalid_stubs =
       mock_fns
       |> Enum.filter(fn {fn_type, _} -> fn_type == :def end)
@@ -438,7 +440,7 @@ defmodule ElixirMock do
       unquote(mock_ast |> inject_elixir_mock_function_utilities |> apply_stub_call_throughs(real_module))
 
       ElixirMock.inject_monitored_real_functions(unquote(real_module),
-                                                 unquote(real_module).__info__(:functions)
+                                                 unquote(real_module).module_info(:exports)
                                                  |> Enum.filter(fn {fn_name, arity} -> not {fn_name, arity} in unquote(stubs) end)
                                                  |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through_unstubbed_fns)} end))
 
@@ -452,7 +454,7 @@ defmodule ElixirMock do
       require ElixirMock
 
       ElixirMock.inject_monitored_real_functions(unquote(real_module),
-                                                 unquote(real_module).__info__(:functions)
+                                                 unquote(real_module).module_info(:exports)
                                                   |> Enum.map(fn {fn_name, arity} -> {fn_name, arity, unquote(call_through)} end))
 
       ElixirMock.inject_elixir_mock_utilities(%{})
