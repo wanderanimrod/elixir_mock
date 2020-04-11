@@ -22,6 +22,18 @@ defmodule ElixirMockTest.Definition do
     assert RealModule.function_one(1) == :real_result_one
   end
 
+  test "should create simple mocks from erlang modules" do
+    mock = mock_of :erlang
+    assert mock.self() == nil
+  end
+
+  test "should create custom mocks from erlang modules" do
+    with_mock(mock) = defmock_of :inet do
+      def ip(_), do: :fake_ip
+    end
+    assert mock.ip(nil) == :fake_ip
+  end
+
   test "should allow functions on mock to delegate to real module functions when they return :call_through" do
     with_mock(mock) = defmock_of RealModule do
       def function_one(_), do: :call_through

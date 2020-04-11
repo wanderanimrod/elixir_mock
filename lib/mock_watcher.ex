@@ -8,6 +8,10 @@ defmodule MockWatcher do
     GenServer.start_link(__MODULE__, %{calls: []}, name: watcher_name)
   end
 
+  def init(init_arg) do
+    {:ok, init_arg}
+  end
+
   def handle_call({:record_call, fn_name, args}, _from, state) do
     calls = state.calls ++ [{fn_name, args}]
     {:reply, :ok, %{state | calls: calls}}
