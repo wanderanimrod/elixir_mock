@@ -22,7 +22,7 @@ defmodule ElixirMock.Mixfile do
   defp deps do
     [
       {:uuid, "~> 1.1"},
-      {:ex_doc, "~> 0.16.2", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
 
