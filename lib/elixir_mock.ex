@@ -161,7 +161,16 @@ defmodule ElixirMock do
 
   For more on the options available within mock definitions, see `defmock_of/2`
   """
-  defmacro defmock_of(real_module, context \\ {:%{}, [], []}, do: mock_ast) do
+  defmacro defmock_of(real_module, opts \\ [context: {:%{}, [], []}, mock_name: nil], do: mock_ast) do
+    {context, mock_name} = case opts do
+      m when is_map(m) ->
+        {m, nil}
+      t when is_tuple(t) ->
+        {t, nil}
+      l when is_list(l) ->
+        {Keyword.get(l, :context, {:%{}, [], []}), Keyword.get(l, :mock_name)}
+    end
+
     call_through_unstubbed_fns = call_through_unstubbed_functions?(mock_ast)
     mock_fns = extract_mock_fns(mock_ast)
     stubs = Enum.map mock_fns, fn {_fn_type, {name, arity}} -> {name, arity} end
@@ -174,7 +183,7 @@ defmodule ElixirMock do
       mock_ast = unquote(Macro.escape(mock_ast))
       call_through_unstubbed_fns = unquote(call_through_unstubbed_fns)
 
-      mock_module_name = random_module_name()
+      mock_module_name = unquote(mock_name) || random_module_name()
 
       verify_mock_structure(mock_fns, real_module)
 
